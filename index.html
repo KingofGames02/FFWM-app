@@ -1,0 +1,1317 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wishlist Manager</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap');
+
+        :root {
+            --bg: #040d1f;
+            --card-bg: #071932;
+            --accent: #4a78c2;
+            --green: #00e676;
+            --green-dark: #00c853;
+            --red: #ff5252;
+            --red-dark: #d50000;
+            --text: #e0e8f2;
+            --muted: #9cb8d6;
+            --radius: 16px;
+            --border: rgba(255, 255, 255, 0.09);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', 'Cairo', sans-serif; }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 10px;
+            overflow-x: hidden;
+        }
+
+        .loader-container {
+            position: fixed; inset: 0; background: rgba(4, 13, 31, 0.9);
+            display: flex; justify-content: center; align-items: center;
+            z-index: 9999; flex-direction: column; gap: 20px;
+            transition: opacity 0.4s ease;
+        }
+        .loader {
+            width: 50px; height: 50px; border: 5px solid var(--border);
+            border-top-color: var(--green); border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        .loader-text { 
+            color: var(--green); font-weight: 800; letter-spacing: 2px; 
+            animation: pulseGlow 1.5s infinite; font-size: 1.1rem;
+        }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        .header-container { text-align: center; margin-bottom: 30px; width: 100%; display: flex; flex-direction: column; align-items: center; }
+        .main-title {
+            font-size: clamp(1.6rem, 6vw, 2.8rem); font-weight: 900; margin-bottom: 5px;
+            background: linear-gradient(to right, #e0e8f2, var(--green), #e0e8f2);
+            background-size: 200% auto; -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent; text-transform: uppercase;
+            letter-spacing: 2px; animation: titleShine 3s linear infinite;
+            white-space: nowrap; overflow: hidden;
+        }
+        @keyframes titleShine { to { background-position: 200% center; } }
+        
+        .sub-title {
+            font-size: 0.85rem; font-weight: 700; color: #FFD700; letter-spacing: 1px;
+            animation: glowEffect 1.5s ease-in-out infinite alternate; text-transform: uppercase;
+            padding: 5px; margin: 0 auto; display: inline-block;
+        }
+        @keyframes glowEffect {
+            from { text-shadow: 0 0 5px #FFD700, 0 0 10px #FFD700; }
+            to { text-shadow: 0 0 15px #FFD700, 0 0 25px #FF8C00; }
+        }
+        @keyframes pulseGlow {
+            0% { opacity: 0.7; } 50% { opacity: 1; text-shadow: 0 0 10px var(--green); } 100% { opacity: 0.7; }
+        }
+
+        .lang-toggle-btn {
+            display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+            background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 12px;
+            padding: 8px 16px; margin-top: 15px; cursor: pointer; color: var(--accent); font-weight: 700;
+            font-size: 0.85rem; transition: all 0.3s;
+        }
+        .lang-toggle-btn:hover { border-color: var(--accent); background: rgba(74, 120, 194, 0.1); transform: translateY(-2px); }
+
+        .card {
+            background: linear-gradient(145deg, var(--card-bg), #051329);
+            border: 1px solid var(--border); border-radius: var(--radius);
+            padding: clamp(15px, 4vw, 30px); 
+            width: 100%; max-width: 500px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); position: relative;
+            animation: fadeIn 0.5s ease;
+            height: auto; min-height: min-content; display: flex; flex-direction: column;
+        }
+        .card.large { max-width: 650px; }
+        .hidden { display: none !important; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+
+        .login-toggle {
+            display: flex; justify-content: center; align-items: center; gap: 15px;
+            margin-bottom: 30px; font-weight: 700; color: var(--muted); text-transform: uppercase;
+        }
+        .toggle-label { transition: all 0.3s; padding: 5px; }
+        .active-mode { color: #fff; text-shadow: 0 0 12px rgba(255,255,255,0.6); }
+        
+        .switch { position: relative; display: inline-block; width: 50px; height: 26px; flex-shrink: 0; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #1a253a; transition: .4s; border-radius: 34px; border: 1px solid var(--border);
+        }
+        .slider:before {
+            position: absolute; content: ""; height: 18px; width: 18px;
+            inset-inline-start: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%;
+        }
+        input:checked + .slider { background-color: var(--green); border-color: var(--green); }
+        input:checked + .slider:before { transform: translateX(24px); }
+        html[dir="rtl"] input:checked + .slider:before { transform: translateX(-24px); }
+
+        .input-group { margin-bottom: 20px; text-align: start; width: 100%; }
+        .input-group label {
+            display: flex; align-items: center; gap: 8px; font-size: 0.75rem; font-weight: 700; color: var(--muted);
+            text-transform: uppercase; margin-bottom: 10px; letter-spacing: 0.5px; white-space: nowrap;
+        }
+        .input-group label svg { width: 16px !important; height: 16px !important; min-width: 16px !important; min-height: 16px !important; flex-shrink: 0 !important; display: block; }
+        .input-group input[type="text"], .input-group input[type="password"] {
+            width: 100%; padding: 15px; border-radius: 12px; border: 1px solid var(--border);
+            background: rgba(0, 0, 0, 0.4); color: #fff; outline: none; font-size: 0.95rem;
+            transition: all 0.3s;
+        }
+        .input-group input:focus { border-color: var(--accent); box-shadow: 0 0 15px rgba(74, 120, 194, 0.2); }
+
+        input[type="file"] { display: none; }
+        .file-upload-wrapper {
+            display: flex; align-items: center; background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--border); border-radius: 12px; padding: 14px 15px;
+            transition: border-color 0.3s; position: relative;
+        }
+        .file-upload-wrapper:hover { border-color: var(--accent); }
+        .btn-choose-file {
+            background: rgba(0, 230, 118, 0.03); color: var(--green); border: 1.5px solid var(--green);
+            padding: 10px 18px; border-radius: 8px; font-weight: 800; cursor: pointer; 
+            transition: all 0.3s; white-space: nowrap; flex-shrink: 0;
+            position: relative; overflow: hidden; display: inline-flex; align-items: center; justify-content: center;
+            margin: 0; line-height: normal;
+        }
+        .btn-choose-file::before {
+            content: ''; position: absolute; top: -50%; left: -100%; width: 50%; height: 200%;
+            background: linear-gradient(to right, rgba(255,255,255,0), rgba(0,230,118,0.3), rgba(255,255,255,0));
+            transform: skewX(-20deg); animation: shineBtn 3s infinite;
+        }
+        @keyframes shineBtn { 0% { left: -100%; } 20% { left: 200%; } 100% { left: 200%; } }
+        .file-name-display {
+            margin-inline-start: 15px; color: var(--muted); font-size: 0.85rem; font-weight: 500;
+            overflow: hidden; white-space: nowrap; text-overflow: ellipsis; flex-grow: 1; padding-inline-end: 10px;
+            line-height: normal; margin-top: 2px;
+        }
+
+        .fit-container { flex: 1; min-width: 0; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+        .glow-container { width: 100%; display: flex; align-items: center; justify-content: center; }
+        .fit-text { white-space: nowrap; display: inline-block; transform-origin: center; }
+
+        .btn-main {
+            width: 100%; padding: 15px 12px; border-radius: 12px; border: none;
+            font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;
+            cursor: pointer; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3); position: relative; overflow: hidden;
+            font-size: 0.95rem; white-space: nowrap;
+        }
+        .btn-main svg { width: 20px !important; height: 20px !important; min-width: 20px !important; min-height: 20px !important; flex-shrink: 0 !important; display: block; }
+        
+        .btn-main::after {
+            content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+            background: rgba(255,255,255,0.1); transform: rotate(45deg) translateY(-100%); transition: 0.5s;
+        }
+        .btn-main:hover::after { transform: rotate(45deg) translateY(100%); }
+        .btn-main:hover { transform: translateY(-3px); }
+        
+        .btn-green { background: linear-gradient(135deg, var(--green), var(--green-dark)); color: #000; box-shadow: 0 6px 15px rgba(0, 230, 118, 0.3); }
+        .btn-green:hover { box-shadow: 0 8px 20px rgba(0, 230, 118, 0.5); }
+        
+        .btn-red { background: linear-gradient(135deg, var(--red), var(--red-dark)); color: #fff; box-shadow: 0 6px 15px rgba(255, 82, 82, 0.3); }
+        .btn-red:hover { box-shadow: 0 8px 20px rgba(255, 82, 82, 0.5); }
+        
+        .btn-outline { background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: #fff; }
+        .btn-outline:hover { background: var(--accent); border-color: var(--accent); }
+
+        .session-info { text-align: center; font-size: 0.7rem; color: #5a6a90; margin-top: 15px; font-weight: 600; }
+
+        .user-card {
+            background: rgba(0, 0, 0, 0.3); border-radius: var(--radius); padding: 15px 20px;
+            display: flex; align-items: center; gap: 15px; margin-bottom: 25px;
+            border: 1px solid var(--border); border-inline-start: 4px solid var(--green); width: 100%;
+        }
+        .avatar-circle {
+            width: 50px; height: 50px; background: rgba(255,255,255,0.05); border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; flex-shrink: 0; border: 1px solid var(--border);
+        }
+        .user-meta { flex-grow: 1; display: flex; flex-direction: column; gap: 2px; overflow: hidden; min-width: 0; }
+        .logged-in-text { font-size: 0.65rem; color: var(--muted); font-weight: 800; text-transform: uppercase; white-space: nowrap; overflow: hidden; }
+        .uid-text { 
+            font-size: 1.1rem; font-weight: 900; color: #fff; letter-spacing: 0.5px; 
+            white-space: nowrap; overflow: hidden; display: block; max-width: 100%;
+        }
+        .region-badge {
+            background: rgba(0, 230, 118, 0.15); color: var(--green); padding: 2px 8px;
+            border-radius: 6px; font-size: 0.65rem; font-weight: 800; display: inline-flex;
+            align-items: center; gap: 5px; width: fit-content; border: 1px solid rgba(0, 230, 118, 0.3);
+            white-space: nowrap; margin-top: 2px;
+        }
+        .region-badge svg { width: 12px !important; height: 12px !important; min-width: 12px !important; min-height: 12px !important; flex-shrink: 0 !important; display: block; }
+        
+        .user-actions { display: flex; gap: 10px; flex-shrink: 0; }
+        .action-icon-btn {
+            background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: var(--muted);
+            width: 42px; height: 42px; min-width: 42px; min-height: 42px; border-radius: 10px; cursor: pointer; display: flex;
+            align-items: center; justify-content: center; transition: all 0.3s; flex-shrink: 0;
+        }
+        .action-icon-btn svg { width: 20px !important; height: 20px !important; min-width: 20px !important; min-height: 20px !important; flex-shrink: 0 !important; display: block; }
+        .btn-copy:hover { background: rgba(0, 230, 118, 0.1); color: var(--green); border-color: var(--green); transform: translateY(-2px); }
+        .btn-exit:hover { background: rgba(255, 82, 82, 0.1); color: var(--red); border-color: var(--red); transform: translateY(-2px); }
+
+        .nav-grid { display: flex; gap: 12px; margin-bottom: 25px; width: 100%; }
+        .nav-grid .btn-main { text-decoration: none; flex: 1; padding: 12px 10px; }
+
+        .action-row { display: flex; gap: 12px; margin-bottom: 5px; width: 100%; }
+        
+        .instruction-box {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 215, 0, 0.2);
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 20px;
+            width: 100%;
+            margin-top: 10px;
+        }
+        .instruction-text {
+            color: #FFD700; font-size: 0.8rem; text-align: center;
+            font-weight: 700; white-space: nowrap; 
+            animation: softGlow 2s infinite alternate;
+        }
+        @keyframes softGlow {
+            0% { text-shadow: 0 0 5px rgba(255, 215, 0, 0.3); opacity: 0.85; }
+            100% { text-shadow: 0 0 15px rgba(255, 215, 0, 0.8), 0 0 20px rgba(255, 215, 0, 0.5); opacity: 1; }
+        }
+
+        .wishlist-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-top: 10px; margin-bottom: 8px; width: 100%;
+        }
+        .wishlist-header h3 { font-size: 1rem; font-weight: 900; color: #fff; text-transform: uppercase; white-space: nowrap; overflow: hidden; transition: color 0.3s; }
+        .wishlist-count { font-size: 0.9rem; font-weight: 800; color: var(--green); background: rgba(0,230,118,0.1); padding: 2px 8px; border-radius: 6px; flex-shrink: 0; display: inline-flex; align-items: center; gap: 2px; }
+        
+        .progress-bar { width: 100%; height: 6px; background: rgba(0,0,0,0.5); border-radius: 10px; margin-bottom: 20px; overflow: hidden; }
+        .progress-fill { height: 100%; background: linear-gradient(to right, var(--accent), var(--green)); transition: width 0.3s ease, background 0.3s; }
+        .progress-fill.full { background: linear-gradient(to right, #f59e0b, var(--red)); }
+
+        .wishlist-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; width: 100%; }
+        
+        .item-wrapper {
+            display: flex; flex-direction: column; background: #0c121e; border-radius: 16px;
+            border: 1px solid rgba(255,255,255,0.06); padding: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            cursor: pointer; transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); position: relative;
+            gap: 8px;
+        }
+        .item-wrapper:active { transform: scale(0.92); box-shadow: 0 2px 8px var(--accent); border-color: var(--accent); }
+        .item-wrapper.selected-remove { border: 2px solid var(--red); box-shadow: 0 0 15px rgba(255, 82, 82, 0.5); transform: scale(0.95); }
+        .item-wrapper.selected-add { border: 2px solid var(--green); box-shadow: 0 0 15px rgba(0, 230, 118, 0.5); transform: scale(0.95); }
+        
+        .item-wrapper.selected-remove::after {
+            content: '✕'; position: absolute; top: 5px; right: 5px; background: var(--red); color: #fff;
+            width: 22px; height: 22px; font-size: 12px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; z-index: 20;
+        }
+        .item-wrapper.selected-add::after {
+            content: '✓'; position: absolute; top: 5px; right: 5px; background: var(--green); color: #000;
+            width: 22px; height: 22px; font-size: 12px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; z-index: 20;
+        }
+
+        .item-box-top {
+            aspect-ratio: 1/1; position: relative; background-size: cover; background-position: center;
+            display: flex; align-items: center; justify-content: center; width: 100%;
+            border-radius: 10px; overflow: hidden;
+        }
+        .card-icon { width: 85%; height: 85%; object-fit: contain; z-index: 2; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.6)); transition: transform 0.3s ease; }
+        .card-icon.weapon-tilt { transform: rotate(25deg) scale(1.25); }
+
+        .item-id-bottom {
+            background: transparent; width: 100%; text-align: center; padding: 4px 2px;
+            border: none; display: flex; align-items: center; justify-content: center; overflow: hidden;
+        }
+        .item-id-bottom span { color: #fff; font-weight: 800; font-size: 0.95rem; letter-spacing: 1px; }
+
+        .remove-all-container { margin-top: 30px; border-top: 1px dashed var(--border); padding-top: 20px; width: 100%; }
+
+        .search-results { margin-top: 15px; max-height: 250px; overflow-y: auto; overflow-x: hidden; padding-inline-end: 5px; width: 100%; }
+        .search-results::-webkit-scrollbar { width: 6px; }
+        .search-results::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+        
+        .search-item {
+            width: 100%; padding: 15px; background: rgba(0,0,0,0.3); border-radius: 12px; margin-bottom: 10px;
+            display: flex; justify-content: space-between; align-items: center; cursor: pointer;
+            border: 1px solid var(--border); transition: all 0.2s; overflow: hidden;
+        }
+        .search-item:hover { border-color: var(--accent); background: rgba(74, 120, 194, 0.1); transform: translateX(5px); }
+        html[dir="rtl"] .search-item:hover { transform: translateX(-5px); }
+        .search-nick { font-weight: 800; font-size: 1rem; color: #fff; white-space: nowrap; overflow: hidden; margin-inline-end: 10px; flex: 1; min-width: 0; }
+        .search-id { color: var(--accent); font-weight: 700; font-size: 0.85rem; background: rgba(255,255,255,0.05); padding: 4px 8px; border-radius: 6px; flex-shrink: 0; }
+
+        .bulk-actions { display: flex; gap: 10px; margin-bottom: 20px; width: 100%; }
+
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(5px);
+            display: flex; justify-content: center; align-items: center; z-index: 2000; opacity: 0; transition: opacity 0.3s;
+            padding: 15px; pointer-events: none;
+        }
+        .modal-overlay.show { opacity: 1; pointer-events: all; }
+        .modal-card {
+            background: linear-gradient(145deg, var(--card-bg), #051329); width: 100%; max-width: 380px;
+            border-radius: 24px; padding: 25px; text-align: center; border: 1px solid var(--border);
+            box-shadow: 0 25px 50px rgba(0,0,0,0.7); transform: scale(0.9); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            max-height: 90vh; overflow-y: auto; overflow-x: hidden;
+        }
+        .modal-overlay.show .modal-card { transform: scale(1); }
+        
+        .modal-icon-wrapper {
+            width: 100%; height: 180px; background: radial-gradient(circle, rgba(255,255,255,0.05) 0%, rgba(0,0,0,0.3) 100%);
+            border-radius: 16px; margin-bottom: 15px; border: 1px dashed var(--border);
+        }
+        .floating-element {
+            width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;
+            animation: floatWrapper 3s ease-in-out infinite;
+        }
+        .large-icon { max-width: 140px; max-height: 140px; object-fit: contain; filter: drop-shadow(0 10px 15px rgba(0,0,0,0.7)); transition: transform 0.3s ease; }
+        .large-icon.weapon-tilt { transform: rotate(25deg) scale(1.5) !important; }
+        @keyframes floatWrapper { 0% { transform: translateY(0); } 50% { transform: translateY(-5px); } 100% { transform: translateY(0); } }
+
+        .item-details-box {
+            background: rgba(0,0,0,0.3); border: 1px solid var(--border); border-radius: 12px;
+            padding: 15px; margin-bottom: 20px; text-align: start; width: 100%; overflow: hidden;
+        }
+        .item-details-box div { margin-bottom: 8px; display: flex; flex-direction: column; gap: 2px; }
+        .item-details-box div:last-child { margin-bottom: 0; }
+        .item-details-box strong { color: #fff; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.5px; }
+        .item-details-box span { color: var(--muted); font-size: 0.85rem; word-break: break-word; line-height: 1.4; }
+
+        .confirm-actions { display: flex; gap: 10px; margin-top: 20px; width: 100%; }
+        .modal-text { color: var(--muted); font-size: 0.9rem; margin-bottom: 25px; line-height: 1.5; }
+
+        @media (max-width: 380px) {
+            .nav-grid { flex-direction: column; }
+            .action-row { flex-direction: column; }
+            .bulk-actions { flex-direction: column; }
+        }
+    </style>
+<link rel="icon" type="image/png" href="icon.png">
+<link rel="apple-touch-icon" href="icon.png">
+<link rel="manifest" href="manifest.json">
+	</head>
+<body>
+
+    <div id="loadingOverlay" class="loader-container hidden">
+        <div class="loader"></div>
+        <div class="loader-text" id="txtProcessing">PROCESSING...</div>
+    </div>
+
+    <div class="header-container">
+        <h1 class="main-title fit-container"><span class="fit-text" data-en="Wishlist Manager" data-ar="مدير قائمة الأمنيات">Wishlist Manager</span></h1>
+        <div class="sub-title" data-en="Made By King of Games" data-ar="تطوير King of Games">Made By King of Games</div>
+        <div id="langToggleBtn" class="lang-toggle-btn" onclick="switchLanguage()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg>
+            <span class="fit-text" data-en="ARABIC" data-ar="ENGLISH">ARABIC</span>
+        </div>
+    </div>
+
+    <div id="login-section" class="card">
+        <div class="login-toggle">
+            <span id="label-dat" class="toggle-label active-mode" data-en=".DAT FILE" data-ar="ملف .DAT">.DAT FILE</span>
+            <label class="switch">
+                <input type="checkbox" id="modeSwitch" onchange="toggleLoginMode()">
+                <span class="slider"></span>
+            </label>
+            <span id="label-manual" class="toggle-label" data-en="MANUAL" data-ar="يدوي">MANUAL</span>
+        </div>
+
+        <div id="form-dat">
+            <div class="input-group">
+                <label data-en="UPLOAD GUEST100067.DAT" data-ar="رفع ملف GUEST100067.DAT">UPLOAD GUEST100067.DAT</label>
+                <div class="file-upload-wrapper">
+                    <label for="guestFile" class="btn-choose-file" data-en="Choose File" data-ar="اختيار ملف">Choose File</label>
+                    <span class="file-name-display" id="fileLabel" data-en="No file chosen" data-ar="لم يتم اختيار ملف">No file chosen</span>
+                    <input type="file" id="guestFile" onchange="updateFileNameDisplay()">
+                </div>
+            </div>
+            <button class="btn-main btn-green" onclick="handleLogin('file')"><div class="fit-container"><span class="fit-text" data-en="LOGIN WITH .DAT FILE" data-ar="تسجيل الدخول بملف .DAT">LOGIN WITH .DAT FILE</span></div></button>
+        </div>
+
+        <div id="form-manual" class="hidden">
+            <div class="input-group">
+                <label data-en="GUEST UID" data-ar="معرف الزائر (UID)">GUEST UID</label>
+                <input type="text" id="manualUid" data-ph-en="Enter your Guest UID" data-ph-ar="أدخل معرف الزائر الخاص بك" placeholder="Enter your Guest UID">
+            </div>
+            <div class="input-group">
+                <label data-en="GUEST PASSWORD" data-ar="كلمة مرور الزائر">GUEST PASSWORD</label>
+                <input type="password" id="manualPassword" data-ph-en="Enter your Password" data-ph-ar="أدخل كلمة المرور" placeholder="Enter your Password">
+            </div>
+            <button class="btn-main btn-green" onclick="handleLogin('manual')"><div class="fit-container"><span class="fit-text" data-en="LOGIN WITH CREDENTIALS" data-ar="تسجيل الدخول بالبيانات">LOGIN WITH CREDENTIALS</span></div></button>
+        </div>
+        <div class="session-info fit-container"><span class="fit-text" data-en="Your credentials are stored securely in session only" data-ar="يتم حفظ بياناتك بأمان في الجلسة الحالية فقط">Your credentials are stored securely in session only</span></div>
+    </div>
+
+    <div id="dashboard-section" class="card large hidden">
+        <div class="user-card">
+            <div class="avatar-circle">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="var(--accent)" style="flex-shrink:0; display:block;"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+            </div>
+            <div class="user-meta">
+                <div class="fit-container" style="justify-content: flex-start;"><span class="logged-in-text fit-text" data-en="LOGGED IN AS" data-ar="مسجل الدخول كـ">LOGGED IN AS</span></div>
+                <div class="fit-container" style="justify-content: flex-start;"><span class="uid-text fit-text" id="displayUid"></span></div>
+                <div class="region-badge">
+                    <svg viewBox="0 0 24 24" fill="currentColor" style="width: 12px; height: 12px; min-width: 12px; min-height: 12px; flex-shrink: 0; display:block;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+                    <span id="displayRegion"></span>
+                </div>
+            </div>
+            <div class="user-actions">
+                <button class="action-icon-btn btn-copy" onclick="copyUid()" title="Copy">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"></path></svg>
+                </button>
+                <button class="action-icon-btn btn-exit" onclick="logout()" title="Logout">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                </button>
+            </div>
+        </div>
+
+        <div class="nav-grid">
+            <a href="https://kingofgames02.github.io/Free-Fire-Items-Library/" target="_blank" class="btn-main btn-outline">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+                <div class="fit-container"><span class="fit-text" data-en="ITEMS LIBRARY" data-ar="مكتبة العناصر">ITEMS LIBRARY</span></div>
+            </a>
+            <button class="btn-main btn-outline" onclick="showSearchInterface()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                <div class="fit-container"><span class="fit-text" data-en="SEARCH ACCOUNT" data-ar="البحث عن حساب">SEARCH ACCOUNT</span></div>
+            </button>
+        </div>
+
+        <div class="input-group" style="margin-bottom: 10px;">
+            <label data-en="ITEM ID (COMMA SEPARATED FOR MULTIPLE)" data-ar="معرف العنصر (افصل بفاصلة لعدة عناصر)">ITEM ID (COMMA SEPARATED FOR MULTIPLE)</label>
+            <input type="text" id="targetIds" data-ph-en="Enter items ID" data-ph-ar="أدخل معرفات العناصر" placeholder="Enter items ID">
+        </div>
+
+        <div class="action-row">
+            <button class="btn-main btn-green" onclick="processAddInput()">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+                <div class="fit-container"><span class="fit-text" id="txtBtnAddMain" data-en="ADD" data-ar="إضافة">ADD</span></div>
+            </button>
+            <button class="btn-main btn-red" onclick="toggleRemoveMode()">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 13H5v-2h14v2z"/></svg>
+                <div class="fit-container"><span id="txtBtnRemove" class="fit-text" data-en="REMOVE" data-ar="إزالة">REMOVE</span></div>
+            </button>
+        </div>
+        
+        <div id="instructionBox" class="instruction-box hidden">
+            <div class="glow-container"><span id="instructionText" class="instruction-text fit-text"></span></div>
+        </div>
+
+        <div class="wishlist-header">
+            <div class="fit-container" style="justify-content: flex-start;"><h3 id="dashboardTitle" class="fit-text" data-en="MY WISHLIST" data-ar="قائمة أمنياتي">MY WISHLIST</h3></div>
+            <span class="wishlist-count" id="dashboardCountContainer"><span id="countCurrent">0</span><span id="countMax">/80</span></span>
+        </div>
+        <div class="progress-bar"><div id="progressFill" class="progress-fill"></div></div>
+
+        <div id="wishlistGrid" class="wishlist-grid"></div>
+
+        <div class="remove-all-container">
+            <button class="btn-main btn-outline" style="color: var(--red); border-color: rgba(255, 82, 82, 0.3);" onclick="promptClearAll()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                <div class="fit-container"><span class="fit-text" data-en="REMOVE ALL ITEMS" data-ar="إزالة كافة العناصر">REMOVE ALL ITEMS</span></div>
+            </button>
+        </div>
+    </div>
+
+    <div id="search-section" class="card large hidden">
+        <button class="btn-outline" style="margin-bottom: 20px; padding: 10px 18px; border-radius: 8px; font-weight: bold; cursor:pointer;" onclick="backToDashboard()"><span data-en="&larr; BACK" data-ar="&rarr; رجوع">&larr; BACK</span></button>
+        
+        <div class="input-group">
+            <label style="display:flex; align-items:center; gap:8px;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px; min-width: 16px; min-height: 16px; flex-shrink: 0; display:block;"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                <span data-en="SEARCH BY ID OR NICKNAME" data-ar="البحث بالمعرف أو الاسم">SEARCH BY ID OR NICKNAME</span>
+            </label>
+            <input type="text" id="searchInput" data-ph-en="Enter Player Name or ID" data-ph-ar="أدخل اسم اللاعب أو المعرف" placeholder="Enter Player Name or ID">
+        </div>
+        <button class="btn-main btn-green" onclick="performSearch()"><div class="fit-container"><span class="fit-text" data-en="SEARCH NOW" data-ar="ابحث الآن">SEARCH NOW</span></div></button>
+        
+        <div id="searchResults" class="search-results"></div>
+        
+        <div id="searchedUserSection" class="hidden" style="margin-top: 25px; width: 100%;">
+            <div class="user-card" style="border-left-color: var(--accent);">
+                <div class="avatar-circle"><svg viewBox="0 0 24 24" fill="var(--accent)" style="width: 28px; height: 28px; min-width: 28px; min-height: 28px; flex-shrink:0; display:block;"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg></div>
+                <div class="user-meta">
+                    <div class="fit-container" style="justify-content: flex-start;"><span class="uid-text fit-text" id="searchNick"></span></div>
+                    <div class="fit-container" style="justify-content: flex-start;"><span class="logged-in-text fit-text" id="searchUid"></span></div>
+                    <div class="region-badge" style="margin-top:4px;"><span id="searchRegion"></span></div>
+                </div>
+            </div>
+
+            <div class="bulk-actions">
+                <button class="btn-main btn-green" onclick="toggleSearchAddMode()"><div class="fit-container"><span id="txtBtnAdd" class="fit-text"></span></div></button>
+                <button class="btn-main btn-outline" onclick="addAllSearchItems()"><div class="fit-container"><span class="fit-text" data-en="ADD ALL ITEMS" data-ar="إضافة كافة العناصر">ADD ALL ITEMS</span></div></button>
+            </div>
+            
+            <div id="searchInstructionBox" class="instruction-box hidden">
+                <div class="glow-container"><span id="searchInstruction" class="instruction-text fit-text"></span></div>
+            </div>
+            
+            <div id="searchBulkProgressBox" class="item-details-box hidden" style="text-align: center; margin-bottom: 20px;">
+                <div style="font-weight: 800; font-size: 1.1rem; margin-bottom: 10px; color: #fff;" id="searchBulkStatusText"></div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-weight: 900; font-size: 0.85rem; text-transform: uppercase;">
+                    <span id="searchBulkActionLabel" style="color: var(--muted);"></span>
+                    <span id="searchBulkCountLabel"></span>
+                </div>
+                <div class="progress-bar" style="margin-bottom: 0;">
+                    <div id="searchBulkProgressFill" class="progress-fill" style="width: 0%; transition: width 0.3s ease, background 0.3s;"></div>
+                </div>
+            </div>
+
+            <div class="wishlist-header">
+                <div class="fit-container" style="justify-content: flex-start;"><h3 class="fit-text" data-en="PLAYER'S WISHLIST" data-ar="قائمة أمنيات اللاعب">PLAYER'S WISHLIST</h3></div>
+                <span class="wishlist-count"><span id="searchCountCurrent">0</span></span>
+            </div>
+            <div id="searchedGrid" class="wishlist-grid"></div>
+        </div>
+    </div>
+
+    <div id="itemModal" class="modal-overlay hidden">
+        <div class="modal-card">
+            <div class="modal-icon-wrapper">
+                <div class="floating-element">
+                    <img id="modalIcon" class="large-icon" src="" alt="">
+                </div>
+            </div>
+            <div class="fit-container" style="margin-bottom: 15px;"><h3 id="modalName" class="fit-text" style="color: #fff; font-weight: 800; font-size: 1.05rem; margin: 0;"></h3></div>
+            
+            <div class="item-details-box">
+                <div><strong data-en="Item ID:" data-ar="معرف العنصر:">Item ID:</strong> <span id="modalId"></span></div>
+                <div><strong data-en="Icon ID:" data-ar="معرف الأيقونة:">Icon ID:</strong> <span id="modalIconId"></span></div>
+                <div><strong data-en="Description:" data-ar="الوصف:">Description:</strong> <span id="modalDesc"></span></div>
+            </div>
+
+            <div id="modalActionArea"></div>
+            <button class="btn-main btn-outline" style="margin-top: 10px;" onclick="closeModal('itemModal')"><div class="fit-container"><span class="fit-text" data-en="CLOSE" data-ar="إغلاق">CLOSE</span></div></button>
+        </div>
+    </div>
+
+    <div id="confirmClearModal" class="modal-overlay hidden">
+        <div class="modal-card">
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2" style="width: 55px; height: 55px; min-width: 55px; min-height: 55px; display: block; margin: 0 auto 15px;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+            <div class="fit-container" style="margin-bottom:10px;"><h3 class="fit-text" style="color:#fff; font-size:1.1rem; font-weight: 900; margin:0;" data-en="ARE YOU SURE?" data-ar="هل أنت متأكد؟">ARE YOU SURE?</h3></div>
+            <p class="modal-text" data-en="This will remove ALL items from your wishlist. This action cannot be undone." data-ar="سيؤدي هذا إلى إزالة كافة العناصر من قائمة أمنياتك. لا يمكن التراجع عن هذا الإجراء.">This will remove ALL items from your wishlist. This action cannot be undone.</p>
+            <div style="display:flex; gap:10px;">
+                <button class="btn-main btn-outline" onclick="closeModal('confirmClearModal')"><div class="fit-container"><span class="fit-text" data-en="CANCEL" data-ar="إلغاء">CANCEL</span></div></button>
+                <button class="btn-main btn-red" onclick="executeClearAll()"><div class="fit-container"><span class="fit-text" data-en="CONFIRM" data-ar="تأكيد">CONFIRM</span></div></button>
+            </div>
+        </div>
+    </div>
+
+<script>
+    const API_BASE = "https://kog-ffwm.vercel.app/api";
+    const GITHUB_BASE = "https://raw.githubusercontent.com/KingofGames02/Free-Fire-Items-Library/main";
+    let libraryData = {};
+    let myWishlistIds = [];
+    
+    let isRemoveMode = false;
+    let selectedForRemoval = new Set();
+    
+    let isSearchAddMode = false;
+    let selectedForAdding = new Set();
+    
+    let currentSearchedUid = null;
+
+    let currentLang = 'en';
+
+    const langDict = {
+        processing: { en: "PROCESSING...", ar: "جاري المعالجة..." },
+        adding: { en: "ADDING", ar: "جاري الإضافة" },
+        removing: { en: "REMOVING", ar: "جاري الإزالة" },
+        completed: { en: "COMPLETED", ar: "اكتمل" },
+        addedSuccess: { en: "item(s) added successfully", ar: "عنصر تمت إضافته بنجاح" },
+        removedSuccess: { en: "item(s) removed", ar: "عنصر تمت إزالته" },
+        alreadyIn: { en: "Already in Wishlist", ar: "موجود مسبقاً في القائمة" },
+        addToWishlist: { en: "ADD TO WISHLIST", ar: "إضافة إلى القائمة" },
+        removeItem: { en: "REMOVE ITEM", ar: "إزالة العنصر" },
+        searchResults: { en: "Search Results:", ar: "نتائج البحث:" },
+        noAccounts: { en: "No matching accounts found.", ar: "لم يتم العثور على حسابات مطابقة." },
+        serverFailSearch: { en: "Server failed to process search.", ar: "فشل الخادم في معالجة البحث." },
+        fetchFail: { en: "Could not fetch this account's wishlist.", ar: "تعذر جلب قائمة أمنيات هذا الحساب." },
+        errorSearch: { en: "An error occurred during search.", ar: "حدث خطأ أثناء البحث." },
+        cancelAdd: { en: "CANCEL ADD", ar: "إلغاء الإضافة" },
+        confirmAdd: { en: "CONFIRM ADD", ar: "تأكيد الإضافة" },
+        selectToAdd: { en: "SELECT ITEMS TO ADD", ar: "حدد العناصر للإضافة" },
+        instAdd: { en: "Select items to add, then click CONFIRM ADD", ar: "حدد العناصر المراد إضافتها، ثم اضغط على تأكيد الإضافة" },
+        cancelRemove: { en: "CANCEL REMOVE", ar: "إلغاء الإزالة" },
+        confirmRemove: { en: "CONFIRM REMOVE", ar: "تأكيد الإزالة" },
+        remove: { en: "REMOVE", ar: "إزالة" },
+        instRemove: { en: "Select items to remove, then click CONFIRM REMOVE", ar: "حدد العناصر المراد إزالتها، ثم اضغط على تأكيد الإزالة" },
+        noFile: { en: "No file chosen", ar: "لم يتم اختيار ملف" },
+        limitReached: { en: "Wishlist capacity reached.", ar: "تم الوصول للحد الأقصى للقائمة." },
+        emptyWishlist: { en: "Wishlist is already empty.", ar: "قائمة الأمنيات فارغة بالفعل." },
+        allAdded: { en: "All items are already in your wishlist.", ar: "كافة العناصر موجودة مسبقاً في قائمتك." },
+        myWishlist: { en: "MY WISHLIST", ar: "قائمة أمنياتي" }
+    };
+    const _t = (key) => langDict[key][currentLang];
+
+    function detectLanguage() {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('lang') === 'ar') {
+            currentLang = 'ar';
+            document.documentElement.dir = 'rtl';
+            document.documentElement.lang = 'ar';
+        } else {
+            currentLang = 'en';
+            document.documentElement.dir = 'ltr';
+            document.documentElement.lang = 'en';
+        }
+    }
+
+    function applyTranslations() {
+        document.querySelectorAll('[data-en]').forEach(el => {
+            el.innerHTML = currentLang === 'ar' ? el.getAttribute('data-ar') : el.getAttribute('data-en');
+        });
+        document.querySelectorAll('[data-ph-en]').forEach(el => {
+            el.placeholder = currentLang === 'ar' ? el.getAttribute('data-ph-ar') : el.getAttribute('data-ph-en');
+        });
+        document.getElementById('txtProcessing').innerText = _t('processing');
+        updateSearchBulkUIButtonOnly();
+        updateRemoveUIButtonOnly();
+    }
+
+    function switchLanguage() {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (currentLang === 'en') {
+            urlParams.set('lang', 'ar');
+        } else {
+            urlParams.set('lang', 'en');
+        }
+        window.location.search = urlParams.toString();
+    }
+
+    function fitText() {
+        document.querySelectorAll('.fit-text').forEach(el => {
+            el.style.fontSize = '';
+            el.style.whiteSpace = 'nowrap';
+            let parent = el.parentElement;
+            let parentW = parent.clientWidth;
+            if (parentW === 0) return;
+            let scrollW = el.scrollWidth;
+            if (scrollW > parentW) {
+                let currentSize = parseFloat(window.getComputedStyle(el).fontSize);
+                el.style.fontSize = Math.floor(currentSize * (parentW / scrollW)) + 'px';
+            }
+        });
+    }
+
+    window.addEventListener('resize', fitText);
+
+    async function init() {
+        detectLanguage();
+        applyTranslations();
+        showLoading(true);
+        try {
+            const dataFile = currentLang === 'ar' ? 'ItemsData_ar.json' : 'ItemsData_en.json';
+            const res = await fetch(`${GITHUB_BASE}/${dataFile}`);
+            if (res.ok) {
+                const data = await res.json();
+                libraryData = data.reduce((acc, item) => { acc[item.itemID] = item; return acc; }, {});
+            }
+        } catch (e) { }
+        
+        if (sessionStorage.getItem("token")) { showDashboard(); updateUserInfo(); fetchWishlist(); }
+        showLoading(false);
+        setTimeout(fitText, 100);
+    }
+
+    function toggleLoginMode() {
+        const isManual = document.getElementById("modeSwitch").checked;
+        document.getElementById("form-dat").classList.toggle("hidden", isManual);
+        document.getElementById("form-manual").classList.toggle("hidden", !isManual);
+        
+        document.getElementById("label-dat").classList.toggle("active-mode", !isManual);
+        document.getElementById("label-manual").classList.toggle("active-mode", isManual);
+        
+        setTimeout(fitText, 50);
+    }
+
+    function updateFileNameDisplay() {
+        const file = document.getElementById("guestFile").files[0];
+        document.getElementById("fileLabel").innerText = file ? file.name : _t('noFile');
+    }
+
+    function showDashboard() {
+        document.querySelectorAll('.card').forEach(c => c.classList.add('hidden'));
+        document.getElementById("dashboard-section").classList.remove("hidden");
+        document.getElementById("langToggleBtn").classList.add("hidden");
+        setTimeout(fitText, 50);
+    }
+
+    function showSearchInterface() {
+        document.querySelectorAll('.card').forEach(c => c.classList.add('hidden'));
+        document.getElementById("search-section").classList.remove("hidden");
+        document.getElementById("searchResults").innerHTML = "";
+        document.getElementById("searchedUserSection").classList.add("hidden");
+        setTimeout(fitText, 50);
+    }
+
+    function backToDashboard() { 
+        showDashboard(); 
+        isRemoveMode = false; selectedForRemoval.clear(); updateRemoveUIButtonOnly();
+        renderGrid(myWishlistIds, "wishlistGrid", 'dashboard');
+    }
+    
+    function showLoading(s) { 
+        const overlay = document.getElementById("loadingOverlay");
+        if(s) { overlay.classList.remove("hidden"); setTimeout(()=> {overlay.style.opacity = '1'; fitText();}, 10); }
+        else { overlay.style.opacity = '0'; setTimeout(()=> overlay.classList.add("hidden"), 400); }
+    }
+
+    function showContextProgress(show, context, action = '', current = 0, total = 0) {
+        if (context === 'dashboard') {
+            const title = document.getElementById('dashboardTitle');
+            const countCurr = document.getElementById('countCurrent');
+            const countMax = document.getElementById('countMax');
+            const fill = document.getElementById('progressFill');
+            
+            if (!show) {
+                title.innerText = _t('myWishlist');
+                updateWishlistStats(); 
+                fitText();
+                return;
+            }
+            
+            fill.classList.remove('full');
+            const isAdd = action === 'add';
+            title.innerText = isAdd ? _t('adding') : _t('removing');
+            fill.style.background = isAdd ? 'var(--green)' : 'var(--red)';
+            countMax.innerText = ' / ' + total;
+            countCurr.innerText = current;
+            fill.style.width = '0%';
+            fitText();
+        } else if (context === 'search') {
+            const box = document.getElementById('searchBulkProgressBox');
+            if (!show) {
+                box.classList.add('hidden');
+                return;
+            }
+            box.classList.remove('hidden');
+            const isAdd = action === 'add';
+            box.style.borderColor = isAdd ? 'var(--green)' : 'var(--red)';
+            document.getElementById('searchBulkActionLabel').style.color = 'var(--muted)';
+            updateContextProgress(context, action, current, total);
+        }
+    }
+
+    function updateContextProgress(context, action, current, total) {
+        const isAdd = action === 'add';
+        const color = isAdd ? 'var(--green)' : 'var(--red)';
+        const actionVerbing = isAdd ? _t('adding') : _t('removing');
+
+        if (context === 'dashboard') {
+            document.getElementById('countCurrent').innerText = current;
+            document.getElementById('progressFill').style.width = `${(current / total) * 100}%`;
+        } else if (context === 'search') {
+            document.getElementById('searchBulkStatusText').innerText = `${actionVerbing} ${current} / ${total}...`;
+            document.getElementById('searchBulkActionLabel').innerText = actionVerbing;
+            const countLabel = document.getElementById('searchBulkCountLabel');
+            countLabel.innerText = `${current} / ${total}`;
+            countLabel.style.color = color;
+            const fill = document.getElementById('searchBulkProgressFill');
+            fill.style.width = `${(current / total) * 100}%`;
+            fill.style.background = color;
+        }
+    }
+
+    function showContextProgressSuccess(context, action, total) {
+        const isAdd = action === 'add';
+        const color = isAdd ? 'var(--green)' : 'var(--red)';
+        const text = isAdd ? `${total} ${_t('addedSuccess')}` : `${total} ${_t('removedSuccess')}`;
+        
+        if (context === 'dashboard') {
+            document.getElementById('dashboardTitle').innerText = text;
+            document.getElementById('dashboardTitle').style.color = color;
+            document.getElementById('countCurrent').innerText = total;
+            fitText();
+            setTimeout(() => { document.getElementById('dashboardTitle').style.color = '#fff'; }, 2000);
+        } else if (context === 'search') {
+            const icon = isAdd ? '✓' : '✕';
+            document.getElementById('searchBulkStatusText').innerHTML = `<span style="color:${color};">${icon} ${text}</span>`;
+            document.getElementById('searchBulkActionLabel').innerText = _t('completed');
+        }
+    }
+
+    async function handleLogin(type) {
+        showLoading(true);
+        let body, headers = {};
+        if (type === 'file') {
+            const file = document.getElementById("guestFile").files[0];
+            if (!file) { showLoading(false); return alert(currentLang === 'ar' ? "يرجى اختيار ملف أولاً." : "Please select a file first."); }
+            body = new FormData(); body.append("file", file);
+        } else {
+            const uid = document.getElementById("manualUid").value;
+            const pwd = document.getElementById("manualPassword").value;
+            if(!uid || !pwd) { showLoading(false); return alert(currentLang === 'ar' ? "يرجى إدخال البيانات المطلوبة." : "Please enter required credentials."); }
+            body = JSON.stringify({ uid, password: pwd });
+            headers = {"Content-Type": "application/json"};
+        }
+
+        try {
+            const res = await fetch(`${API_BASE}/login`, { method: "POST", headers, body });
+            const data = await res.json();
+            if (res.ok) {
+                Object.keys(data).forEach(k => sessionStorage.setItem(k, data[k]));
+                showDashboard(); updateUserInfo(); fetchWishlist();
+            } else alert("Error: " + (data.error || "Login Failed"));
+        } catch (e) { alert("Server connection failed."); }
+        showLoading(false);
+    }
+
+    function updateUserInfo() {
+        document.getElementById("displayUid").innerText = sessionStorage.getItem("uid");
+        document.getElementById("displayRegion").innerText = sessionStorage.getItem("lockRegion") || "ME";
+        setTimeout(fitText, 50);
+    }
+
+    function copyUid() { 
+        navigator.clipboard.writeText(sessionStorage.getItem("uid")); 
+        const btn = document.querySelector('.btn-copy');
+        btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 20px; height: 20px; min-width: 20px; min-height: 20px; flex-shrink: 0; display:block;"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+        setTimeout(() => { btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 20px; height: 20px; min-width: 20px; min-height: 20px; flex-shrink: 0; display:block;"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"></path></svg>`; }, 2000);
+    }
+    
+    function logout() { sessionStorage.clear(); location.reload(); }
+
+    async function fetchWishlist() {
+        try {
+            const res = await fetch(`${API_BASE}/wishlist`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": sessionStorage.getItem("token"),
+                    "Server-Url": sessionStorage.getItem("server_url")
+                },
+                body: JSON.stringify({ account_id: sessionStorage.getItem("uid") })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                myWishlistIds = (data.items || []).map(i => i.id);
+                updateWishlistStats();
+                renderGrid(myWishlistIds, "wishlistGrid", 'dashboard');
+            }
+        } catch (e) {}
+    }
+
+    function updateWishlistStats() {
+        const count = myWishlistIds.length;
+        document.getElementById("countCurrent").innerText = count;
+        document.getElementById("countMax").innerText = '/80';
+        const fill = document.getElementById("progressFill");
+        fill.style.width = `${(count/80)*100}%`;
+        fill.style.background = 'linear-gradient(to right, var(--accent), var(--green))';
+        if(count >= 80) fill.classList.add('full'); else fill.classList.remove('full');
+    }
+
+    async function processAddInput() {
+        const val = document.getElementById("targetIds").value;
+        const ids = val.split(",").map(i => parseInt(i.trim())).filter(i => !isNaN(i));
+        if (!ids.length) return;
+        
+        if (myWishlistIds.length + ids.length > 80) {
+            alert(`${currentLang === 'ar' ? 'لا يمكن إضافة' : 'Cannot add'} ${ids.length} ${currentLang === 'ar' ? 'عنصر. الحد الأقصى هو 80 (الحالي:' : 'items. Maximum limit is 80 (Current:'} ${myWishlistIds.length}).`);
+            return;
+        }
+        await executeModifyWishlist('add', ids, 'dashboard');
+        document.getElementById("targetIds").value = "";
+    }
+
+    function updateRemoveUIButtonOnly() {
+        const btnText = document.getElementById("txtBtnRemove");
+        const instBox = document.getElementById("instructionBox");
+        if (isRemoveMode) {
+            btnText.innerText = selectedForRemoval.size === 0 ? _t('cancelRemove') : `${_t('confirmRemove')} (${selectedForRemoval.size})`;
+            document.getElementById("instructionText").innerText = _t('instRemove');
+            instBox.classList.remove('hidden');
+        } else {
+            btnText.innerText = _t('remove');
+            instBox.classList.add('hidden');
+        }
+        fitText();
+    }
+
+    function toggleRemoveMode() {
+        if (!isRemoveMode) {
+            isRemoveMode = true;
+            selectedForRemoval.clear();
+            updateRemoveUIButtonOnly();
+        } else {
+            if (selectedForRemoval.size > 0) {
+                const idsToRemove = Array.from(selectedForRemoval);
+                executeModifyWishlist('remove', idsToRemove, 'dashboard').then(() => {
+                    selectedForRemoval.clear();
+                    isRemoveMode = false;
+                    updateRemoveUIButtonOnly();
+                });
+                return;
+            }
+            selectedForRemoval.clear();
+            isRemoveMode = false;
+            updateRemoveUIButtonOnly();
+            const elems = document.querySelectorAll('#wishlistGrid .item-wrapper.selected-remove');
+            elems.forEach(el => el.classList.remove('selected-remove'));
+        }
+    }
+
+    async function executeModifyWishlist(action, ids, context) {
+        if (!ids.length) return;
+        ids.sort((a, b) => a - b);
+        const isBulk = ids.length > 1;
+
+        if (isBulk) {
+            showContextProgress(true, context, action, 0, ids.length);
+        } else {
+            showLoading(true);
+        }
+
+        for (let i = 0; i < ids.length; i++) {
+            if (isBulk) updateContextProgress(context, action, i + 1, ids.length);
+            
+            const currentId = ids[i];
+            const payload = {
+                add_ids: action === 'add' ? [currentId] : [],
+                del_ids: action === 'remove' ? [currentId] : [],
+                add_src: action === 'add' ? ["WishList"] : [],
+                del_src: action === 'remove' ? ["WishList"] : []
+            };
+
+            try {
+                await fetch(`${API_BASE}/wishlist/update`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": sessionStorage.getItem("token"),
+                        "Server-Url": sessionStorage.getItem("server_url")
+                    },
+                    body: JSON.stringify(payload)
+                });
+            } catch (e) {
+                console.error("Error updating item", currentId);
+            }
+
+            if (isBulk && i < ids.length - 1) {
+                await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+        }
+
+        if (isBulk) {
+            showContextProgressSuccess(context, action, ids.length);
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            showContextProgress(false, context);
+        } else {
+            showLoading(false);
+        }
+
+        showLoading(true);
+        await fetchWishlist();
+        showLoading(false);
+    }
+
+    function promptClearAll() {
+        if(myWishlistIds.length === 0) return alert(_t('emptyWishlist'));
+        const modal = document.getElementById('confirmClearModal');
+        modal.classList.remove('hidden');
+        setTimeout(() => { modal.classList.add('show'); fitText(); }, 10);
+    }
+    
+    function executeClearAll() {
+        closeModal('confirmClearModal');
+        executeModifyWishlist('remove', myWishlistIds, 'dashboard');
+    }
+
+    function handleCardClick(id, context, element) {
+        if (context === 'dashboard') {
+            if (isRemoveMode) {
+                if (selectedForRemoval.has(id)) {
+                    selectedForRemoval.delete(id);
+                    element.classList.remove('selected-remove');
+                } else {
+                    selectedForRemoval.add(id);
+                    element.classList.add('selected-remove');
+                }
+                updateRemoveUIButtonOnly();
+            } else {
+                showItemDetail(id, 'dashboard');
+            }
+        } 
+        else if (context === 'search') {
+            if (isSearchAddMode) {
+                if(myWishlistIds.includes(parseInt(id))) return;
+                if (selectedForAdding.has(id)) {
+                    selectedForAdding.delete(id);
+                    element.classList.remove('selected-add');
+                } else {
+                    selectedForAdding.add(id);
+                    element.classList.add('selected-add');
+                }
+                updateSearchBulkUIButtonOnly();
+            } else {
+                showItemDetail(id, 'search');
+            }
+        }
+    }
+
+    function renderGrid(ids, containerId, context) {
+        const grid = document.getElementById(containerId);
+        grid.innerHTML = "";
+        
+        ids.forEach(id => {
+            const item = libraryData[id] || {};
+            let rare = "COMMON";
+            if (item.Rare && item.Rare.toUpperCase() !== "NONE") rare = item.Rare.toUpperCase();
+            
+            const bgUrl = `${GITHUB_BASE}/RareBG_Quality/${rare}.png`;
+            const iconUrl = `${GITHUB_BASE}/icons/${id}.png`;
+            
+            const wrapper = document.createElement("div");
+            wrapper.className = "item-wrapper";
+            wrapper.setAttribute('data-id', id);
+            
+            if (context === 'dashboard' && isRemoveMode && selectedForRemoval.has(id)) wrapper.classList.add('selected-remove');
+            if (context === 'search' && isSearchAddMode && selectedForAdding.has(id)) wrapper.classList.add('selected-add');
+            
+            wrapper.onclick = function() { handleCardClick(id, context, this); };
+
+            const box = document.createElement("div");
+            box.className = "item-box-top";
+            box.style.backgroundImage = `url('${bgUrl}')`;
+            
+            const img = document.createElement("img");
+            img.className = "card-icon";
+            img.loading = "lazy";
+            
+            const checkGridTilt = function() {
+                if (this.naturalWidth === 300 && this.naturalHeight === 90) {
+                    this.classList.add('weapon-tilt');
+                }
+            };
+            
+            img.onload = checkGridTilt;
+            img.onerror = function() { this.onerror = null; this.src = `${GITHUB_BASE}/RareBG_Quality/UNKNOWN.png`; };
+            img.src = iconUrl;
+            
+            if(img.complete && img.naturalWidth !== 0) {
+                checkGridTilt.call(img);
+            }
+
+            const tagContainer = document.createElement("div");
+            tagContainer.className = "item-id-bottom fit-container";
+            tagContainer.innerHTML = `<span class="fit-text">${id}</span>`;
+
+            box.appendChild(img);
+            wrapper.appendChild(box);
+            wrapper.appendChild(tagContainer);
+            grid.appendChild(wrapper);
+        });
+        setTimeout(fitText, 50);
+    }
+
+    function cleanString(str) {
+        if (!str) return "Unknown";
+        return str.replace(/\\t|\\n|\\r|\t|\n|\r/g, '').trim();
+    }
+
+    async function performSearch() {
+        const query = document.getElementById("searchInput").value.trim();
+        if (!query) return;
+        
+        showLoading(true);
+        const resultsDiv = document.getElementById("searchResults");
+        const userSection = document.getElementById("searchedUserSection");
+        resultsDiv.innerHTML = "";
+        userSection.classList.add("hidden");
+
+        if (!isNaN(query)) {
+            try {
+                const pRes = await fetch(`${API_BASE}/player`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": sessionStorage.getItem("token"),
+                        "Server-Url": sessionStorage.getItem("server_url")
+                    },
+                    body: JSON.stringify({ account_id: query })
+                });
+                const pData = await pRes.json();
+                let nick = "Unknown";
+                let region = "Unknown";
+                
+                if (pData.status === "success" && pData.data) {
+                    const nickMatch = pData.data.match(/nickname:\s*"([^"]+)"/);
+                    const regionMatch = pData.data.match(/region:\s*"([^"]+)"/);
+                    if (nickMatch) nick = cleanString(nickMatch[1]);
+                    if (regionMatch) region = regionMatch[1].trim();
+                }
+                fetchExternalWishlist(query, nick, region);
+            } catch (e) {
+                fetchExternalWishlist(query, "Unknown", "Unknown");
+            }
+        } else {
+            try {
+                const res = await fetch(`${API_BASE}/search`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": sessionStorage.getItem("token"),
+                        "Server-Url": sessionStorage.getItem("server_url")
+                    },
+                    body: JSON.stringify({ keyword: query })
+                });
+                const data = await res.json();
+                
+                if(data.status === "success" && data.data) {
+                    resultsDiv.innerHTML = `<p style='color:var(--muted); margin-bottom:15px; font-weight:800; font-size:0.8rem; text-transform:uppercase;'>${_t('searchResults')}</p>`;
+                    
+                    const regex = /accountid:\s*(\d+)[\s\S]*?nickname:\s*"([^"]+)"(?:[\s\S]*?region:\s*"([^"]+)")?/gi;
+                    let match;
+                    let found = false;
+
+                    while ((match = regex.exec(data.data)) !== null) {
+                        found = true;
+                        const accId = match[1];
+                        const nick = cleanString(match[2]);
+                        const region = match[3] ? match[3].trim() : "Unknown";
+
+                        const div = document.createElement("div");
+                        div.className = "search-item";
+                        div.innerHTML = `<span class="search-nick">${nick}</span><span class="search-id">${accId}</span>`;
+                        div.onclick = () => fetchExternalWishlist(accId, nick, region);
+                        resultsDiv.appendChild(div);
+                    }
+
+                    if (!found) {
+                        resultsDiv.innerHTML = `<p style='color:var(--red); font-weight:bold; text-align:center;'>${_t('noAccounts')}</p>`;
+                    }
+                } else {
+                    resultsDiv.innerHTML = `<p style='color:var(--red); font-weight:bold; text-align:center;'>${_t('serverFailSearch')}</p>`;
+                }
+            } catch (e) { alert(_t('errorSearch')); }
+        }
+        showLoading(false);
+    }
+
+    async function fetchExternalWishlist(targetUid, nick = "Unknown", region = "Unknown") {
+        showLoading(true);
+        try {
+            const res = await fetch(`${API_BASE}/wishlist`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": sessionStorage.getItem("token"),
+                    "Server-Url": sessionStorage.getItem("server_url")
+                },
+                body: JSON.stringify({ account_id: parseInt(targetUid) })
+            });
+            const data = await res.json();
+            
+            if (res.ok) {
+                currentSearchedUid = targetUid;
+                document.getElementById("searchResults").innerHTML = ""; 
+                
+                let itemsList = [];
+                if(data.items) {
+                     itemsList = data.items.map(i => i.id);
+                }
+                
+                document.getElementById("searchNick").innerText = nick;
+                document.getElementById("searchUid").innerText = targetUid;
+                document.getElementById("searchRegion").innerText = region;
+                document.getElementById("searchCountCurrent").innerText = itemsList.length;
+                
+                document.getElementById("searchedUserSection").classList.remove("hidden");
+                
+                isSearchAddMode = false;
+                selectedForAdding.clear();
+                updateSearchBulkUIButtonOnly();
+                
+                renderGrid(itemsList, "searchedGrid", 'search');
+            } else {
+                alert(_t('fetchFail'));
+            }
+        } catch (e) { alert(_t('errorSearch')); }
+        showLoading(false);
+    }
+
+    function updateSearchBulkUIButtonOnly() {
+        const btnText = document.getElementById("txtBtnAdd");
+        const instBox = document.getElementById("searchInstructionBox");
+        if (isSearchAddMode) {
+            btnText.innerText = selectedForAdding.size === 0 ? _t('cancelAdd') : `${_t('confirmAdd')} (${selectedForAdding.size})`;
+            document.getElementById("searchInstruction").innerText = _t('instAdd');
+            instBox.classList.remove('hidden');
+        } else {
+            btnText.innerText = _t('selectToAdd');
+            instBox.classList.add('hidden');
+        }
+        fitText();
+    }
+
+    function toggleSearchAddMode() {
+        if (!isSearchAddMode) {
+            isSearchAddMode = true;
+            selectedForAdding.clear();
+            updateSearchBulkUIButtonOnly();
+        } else {
+            if (selectedForAdding.size > 0) {
+                executeSearchBulkAdd();
+                return;
+            }
+            isSearchAddMode = false;
+            selectedForAdding.clear();
+            updateSearchBulkUIButtonOnly();
+            const elems = document.querySelectorAll('#searchedGrid .item-wrapper.selected-add');
+            elems.forEach(el => el.classList.remove('selected-add'));
+        }
+    }
+
+    async function executeSearchBulkAdd() {
+        if(selectedForAdding.size === 0) return;
+        const ids = Array.from(selectedForAdding);
+        if (myWishlistIds.length + ids.length > 80) return alert(_t('limitReached'));
+        await executeModifyWishlist('add', ids, 'search');
+        selectedForAdding.clear();
+        isSearchAddMode = false;
+        updateSearchBulkUIButtonOnly();
+        const elems = document.querySelectorAll('#searchedGrid .item-wrapper.selected-add');
+        elems.forEach(el => el.classList.remove('selected-add'));
+    }
+
+    async function addAllSearchItems() {
+        const allNodes = document.querySelectorAll("#searchedGrid .item-wrapper");
+        const allIds = Array.from(allNodes).map(n => parseInt(n.getAttribute('data-id'))).filter(id => !myWishlistIds.includes(id));
+        if(allIds.length === 0) return alert(_t('allAdded'));
+        if(myWishlistIds.length + allIds.length > 80) return alert(`${_t('limitReached')} ${allIds.length} ${currentLang === 'ar' ? 'عنصر.' : 'items.'}`);
+        await executeModifyWishlist('add', allIds, 'search');
+        isSearchAddMode = false;
+        selectedForAdding.clear();
+        updateSearchBulkUIButtonOnly();
+    }
+
+    function showItemDetail(id, context) {
+        const modal = document.getElementById("itemModal");
+        const actionArea = document.getElementById("modalActionArea");
+        const iconEl = document.getElementById("modalIcon");
+        
+        iconEl.classList.remove('weapon-tilt');
+        
+        const item = libraryData[id] || {};
+        const itemName = item.name || "Unknown Item";
+        const itemIconId = item.icon || "Unknown Icon";
+        const itemDesc = item.description || "No description available.";
+
+        document.getElementById("modalName").innerText = itemName;
+        document.getElementById("modalId").innerText = id;
+        document.getElementById("modalIconId").innerText = itemIconId;
+        document.getElementById("modalDesc").innerText = itemDesc;
+
+        iconEl.className = "large-icon";
+        
+        const checkModalTilt = function() { 
+            if (this.naturalWidth === 300 && this.naturalHeight === 90) {
+                this.classList.add('weapon-tilt'); 
+            }
+        };
+        
+        iconEl.onload = checkModalTilt;
+        iconEl.onerror = function() { this.onerror = null; this.src = `${GITHUB_BASE}/RareBG_Quality/UNKNOWN.png`; };
+        iconEl.src = `${GITHUB_BASE}/icons/${id}.png`;
+        
+        if(iconEl.complete && iconEl.naturalWidth !== 0) {
+            checkModalTilt.call(iconEl);
+        }
+
+        if (context === 'search') {
+            if (myWishlistIds.includes(parseInt(id))) {
+                actionArea.innerHTML = `<div class="fit-container" style="margin-top:15px;"><p class="fit-text" style="color:var(--green); font-weight:800; font-size:0.9rem; text-transform:uppercase; margin:0;">${_t('alreadyIn')}</p></div>`;
+            } else {
+                actionArea.innerHTML = `<button class="btn-main btn-green" style="margin-top:15px;" onclick="modifySingleItem('add', ${id}, 'itemModal', '${context}')"><div class="fit-container"><span class="fit-text">${_t('addToWishlist')}</span></div></button>`;
+            }
+        } else {
+            actionArea.innerHTML = `<button class="btn-main btn-red" style="margin-top:15px;" onclick="modifySingleItem('remove', ${id}, 'itemModal', '${context}')"><div class="fit-container"><span class="fit-text">${_t('removeItem')}</span></div></button>`;
+        }
+
+        modal.classList.remove("hidden");
+        setTimeout(() => { modal.classList.add("show"); fitText(); }, 10);
+    }
+
+    async function modifySingleItem(action, id, modalId, context) {
+        closeModal(modalId);
+        await executeModifyWishlist(action, [id], context);
+    }
+
+    function closeModal(modalId) { 
+        const modal = document.getElementById(modalId);
+        modal.classList.remove("show");
+        setTimeout(() => modal.classList.add("hidden"), 300);
+    }
+
+    window.onload = init;
+</script>
+</body>
+</html>
