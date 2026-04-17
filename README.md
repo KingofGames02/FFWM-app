@@ -22,7 +22,7 @@
 ### 📸 Screenshots
 | Login Screen (EN) | Dashboard (EN) |
 |---|---|
-| ![Login EN](./screenshots/login-en.jpg) | ![Dashboard EN](./screenshots/dashboard-en.jpg) |
+| ![Login EN](./Screenshots/login-en.jpg) | ![Dashboard EN](./Screenshots/dashboard-en.jpg) |
 
 ---
 
@@ -43,7 +43,7 @@
 ### 📸 لقطات الشاشة
 | شاشة تسجيل الدخول (AR) | لوحة التحكم (AR) |
 |---|---|
-| ![Login AR](./screenshots/login-ar.jpg) | ![Dashboard AR](./screenshots/dashboard-ar.jpg) |
+| ![Login AR](./Screenshots/login-ar.jpg) | ![Dashboard AR](./Screenshots/dashboard-ar.jpg) |
 
 ---
 
