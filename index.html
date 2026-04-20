@@ -390,7 +390,7 @@
                 <div class="file-upload-wrapper">
                     <label for="guestFile" class="btn-choose-file" data-en="Choose File" data-ar="اختيار ملف">Choose File</label>
                     <span class="file-name-display" id="fileLabel" data-en="No file chosen" data-ar="لم يتم اختيار ملف">No file chosen</span>
-                    <input type="file" id="guestFile" onchange="updateFileNameDisplay()">
+                    <input type="file" id="guestFile" accept=".dat" onchange="updateFileNameDisplay()">
                 </div>
             </div>
             <button class="btn-main btn-green" onclick="handleLogin('file')"><div class="fit-container"><span class="fit-text" data-en="LOGIN WITH .DAT FILE" data-ar="تسجيل الدخول بملف .DAT">LOGIN WITH .DAT FILE</span></div></button>
