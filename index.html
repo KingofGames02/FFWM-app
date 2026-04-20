@@ -798,12 +798,20 @@
         }
     }
 
-    async function handleLogin(type) {
+        async function handleLogin(type) {
         showLoading(true);
         let body, headers = {};
         if (type === 'file') {
             const file = document.getElementById("guestFile").files[0];
             if (!file) { showLoading(false); return alert(currentLang === 'ar' ? "يرجى اختيار ملف أولاً." : "Please select a file first."); }
+            
+            if (!file.name.toLowerCase().endsWith('.dat')) {
+                showLoading(false);
+                document.getElementById("guestFile").value = "";
+                document.getElementById("fileLabel").innerText = currentLang === 'ar' ? 'لم يتم اختيار ملف' : 'No file chosen';
+                return alert(currentLang === 'ar' ? "يرجى اختيار ملف بصيغة .dat فقط." : "Please select a .dat file only.");
+            }
+
             body = new FormData(); body.append("file", file);
         } else {
             const uid = document.getElementById("manualUid").value;
