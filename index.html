@@ -241,6 +241,22 @@
             font-weight: 700; white-space: nowrap; 
             animation: softGlow 2s infinite alternate;
         }
+
+        .warning-box {
+            background: rgba(213, 0, 0, 0.15);
+            border: 1px solid rgba(255, 82, 82, 0.5);
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 20px;
+            width: 100%;
+            margin-top: 10px;
+        }
+        .warning-text {
+            color: var(--red); font-size: 0.85rem; text-align: center;
+            font-weight: 800; white-space: nowrap; 
+            text-shadow: 0 0 10px rgba(255, 82, 82, 0.4);
+        }
+
         @keyframes softGlow {
             0% { text-shadow: 0 0 5px rgba(255, 215, 0, 0.3); opacity: 0.85; }
             100% { text-shadow: 0 0 15px rgba(255, 215, 0, 0.8), 0 0 20px rgba(255, 215, 0, 0.5); opacity: 1; }
@@ -444,6 +460,10 @@
             </button>
         </div>
 
+        <div id="corruptedWarningBanner" class="warning-box hidden">
+            <div class="glow-container"><span class="warning-text fit-text" data-en="Corrupted items detected in your wishlist! Please select and remove them." data-ar="هناك عناصر غير صالحة في قائمة أمنياتك، يرجى تحديدها وإزالتها!"></span></div>
+        </div>
+
         <div class="input-group" style="margin-bottom: 10px;">
             <label data-en="ITEM ID (COMMA SEPARATED FOR MULTIPLE)" data-ar="معرف العنصر (افصل بفاصلة لعدة عناصر)">ITEM ID (COMMA SEPARATED FOR MULTIPLE)</label>
             <input type="text" id="targetIds" data-ph-en="Enter items ID" data-ph-ar="أدخل معرفات العناصر" placeholder="Enter items ID">
@@ -502,6 +522,10 @@
                     <div class="fit-container" style="justify-content: flex-start;"><span class="logged-in-text fit-text" id="searchUid"></span></div>
                     <div class="region-badge" style="margin-top:4px;"><span id="searchRegion"></span></div>
                 </div>
+            </div>
+
+            <div id="searchCorruptedWarningBanner" class="warning-box hidden">
+                <div class="glow-container"><span class="warning-text fit-text" data-en="Corrupted items detected in this player's wishlist!" data-ar="هناك عناصر غير صالحة في قائمة أمنيات هذا اللاعب!"></span></div>
             </div>
 
             <div class="bulk-actions">
@@ -798,7 +822,7 @@
         }
     }
 
-        async function handleLogin(type) {
+    async function handleLogin(type) {
         showLoading(true);
         let body, headers = {};
         if (type === 'file') {
@@ -863,6 +887,14 @@
                 myWishlistIds = (data.items || []).map(i => i.id);
                 updateWishlistStats();
                 renderGrid(myWishlistIds, "wishlistGrid", 'dashboard');
+                
+                const banner = document.getElementById('corruptedWarningBanner');
+                if (data.has_corrupted_item) {
+                    banner.classList.remove('hidden');
+                } else {
+                    banner.classList.add('hidden');
+                }
+                setTimeout(fitText, 50);
             }
         } catch (e) {}
     }
@@ -1194,6 +1226,14 @@
                 
                 document.getElementById("searchedUserSection").classList.remove("hidden");
                 
+                const searchBanner = document.getElementById('searchCorruptedWarningBanner');
+                if (data.has_corrupted_item) {
+                    searchBanner.classList.remove('hidden');
+                } else {
+                    searchBanner.classList.add('hidden');
+                }
+                setTimeout(fitText, 50);
+
                 isSearchAddMode = false;
                 selectedForAdding.clear();
                 updateSearchBulkUIButtonOnly();
