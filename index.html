@@ -995,8 +995,12 @@
                 console.error("Error updating item", currentId);
             }
 
-            if (isBulk && i < ids.length - 1) {
-                await new Promise(resolve => setTimeout(resolve, 1000));
+                        if (isBulk && i < ids.length - 1) {
+                if (action === 'add') {
+                    await new Promise(resolve => setTimeout(resolve, 300));
+                } else if (action === 'remove') {
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                }
             }
         }
 
