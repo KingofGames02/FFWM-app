@@ -423,6 +423,10 @@
             </div>
             <button class="btn-main btn-green" onclick="handleLogin('manual')"><div class="fit-container"><span class="fit-text" data-en="LOGIN WITH CREDENTIALS" data-ar="تسجيل الدخول بالبيانات">LOGIN WITH CREDENTIALS</span></div></button>
         </div>
+        <div id="loginNotification" class="instruction-box hidden" style="margin-bottom: 20px; transition: opacity 0.3s; display: flex; align-items: center; justify-content: center; gap: 8px;">
+            <span id="loginNotifIcon" style="display: flex; align-items: center; flex-shrink: 0;"></span>
+            <span id="loginNotifText" class="instruction-text fit-text" style="color: inherit; animation: none;"></span>
+        </div>
         <div class="session-info fit-container"><span class="fit-text" data-en="Your credentials are saved securely to keep you logged in." data-ar="يتم حفظ بياناتك بأمان لإبقائك مسجل الدخول تلقائياً.">Your credentials are saved securely to keep you logged in.</span></div>
     </div>
 
@@ -480,6 +484,11 @@
             </button>
         </div>
         
+        <div id="dashNotification" class="instruction-box hidden" style="margin-top: 10px; margin-bottom: 20px; transition: opacity 0.3s; display: flex; align-items: center; justify-content: center; gap: 8px;">
+            <span id="dashNotifIcon" style="display: flex; align-items: center; flex-shrink: 0;"></span>
+            <span id="dashNotifText" class="instruction-text fit-text" style="color: inherit; animation: none;"></span>
+        </div>
+
         <div id="instructionBox" class="instruction-box hidden">
             <div class="glow-container"><span id="instructionText" class="instruction-text fit-text"></span></div>
         </div>
@@ -533,6 +542,11 @@
                 <button class="btn-main btn-outline" onclick="addAllSearchItems()"><div class="fit-container"><span class="fit-text" data-en="ADD ALL ITEMS" data-ar="إضافة كافة العناصر">ADD ALL ITEMS</span></div></button>
             </div>
             
+            <div id="searchNotification" class="instruction-box hidden" style="margin-top: 10px; margin-bottom: 20px; transition: opacity 0.3s; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                <span id="searchNotifIcon" style="display: flex; align-items: center; flex-shrink: 0;"></span>
+                <span id="searchNotifText" class="instruction-text fit-text" style="color: inherit; animation: none;"></span>
+            </div>
+
             <div id="searchInstructionBox" class="instruction-box hidden">
                 <div class="glow-container"><span id="searchInstruction" class="instruction-text fit-text"></span></div>
             </div>
@@ -726,6 +740,47 @@
     }
 
     window.addEventListener('resize', fitText);
+
+    function showNotification(msg, type = 'error', context = 'dashboard') {
+        let boxId, textId, iconId;
+        if (context === 'dashboard') { boxId = 'dashNotification'; textId = 'dashNotifText'; iconId = 'dashNotifIcon'; }
+        else if (context === 'search') { boxId = 'searchNotification'; textId = 'searchNotifText'; iconId = 'searchNotifIcon'; }
+        else if (context === 'login') { boxId = 'loginNotification'; textId = 'loginNotifText'; iconId = 'loginNotifIcon'; }
+        
+        const box = document.getElementById(boxId);
+        const text = document.getElementById(textId);
+        const icon = document.getElementById(iconId);
+
+        box.classList.remove('hidden');
+        
+        if (type === 'error') {
+            box.style.background = 'rgba(213, 0, 0, 0.15)';
+            box.style.borderColor = 'rgba(255, 82, 82, 0.5)';
+            text.style.color = 'var(--red)';
+            text.style.textShadow = '0 0 10px rgba(255, 82, 82, 0.4)';
+            icon.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2" style="width: 18px; height: 18px;"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>`;
+        } else if (type === 'success') {
+            box.style.background = 'rgba(0, 230, 118, 0.15)';
+            box.style.borderColor = 'rgba(0, 230, 118, 0.5)';
+            text.style.color = 'var(--green)';
+            text.style.textShadow = '0 0 10px rgba(0, 230, 118, 0.4)';
+            icon.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" style="width: 18px; height: 18px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>`;
+        } else if (type === 'warning') {
+            box.style.background = 'rgba(255, 215, 0, 0.15)';
+            box.style.borderColor = 'rgba(255, 215, 0, 0.5)';
+            text.style.color = '#FFD700';
+            text.style.textShadow = '0 0 10px rgba(255, 215, 0, 0.4)';
+            icon.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="#FFD700" stroke-width="2" style="width: 18px; height: 18px;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>`;
+        }
+        
+        text.innerText = msg;
+        fitText();
+        
+        if (box.notifTimer) clearTimeout(box.notifTimer);
+        box.notifTimer = setTimeout(() => {
+            box.classList.add('hidden');
+        }, 5000);
+    }
 
     function getIconUrl(id) {
         const item = libraryData[id];
@@ -937,7 +992,6 @@
     }
 
     function handleSessionExpiry() {
-        alert(currentLang === 'ar' ? 'انتهت صلاحية الجلسة، جاري التحديث تلقائياً...' : 'Session expired, refreshing automatically...');
         location.reload();
     }
 
@@ -949,20 +1003,20 @@
 
         if (type === 'file') {
             const file = document.getElementById("guestFile").files[0];
-            if (!file) { showLoading(false); return alert(currentLang === 'ar' ? "يرجى اختيار ملف أولاً." : "Please select a file first."); }
+            if (!file) { showLoading(false); return showNotification(currentLang === 'ar' ? "يرجى اختيار ملف أولاً." : "Please select a file first.", 'warning', 'login'); }
             
             if (!file.name.toLowerCase().endsWith('.dat')) {
                 showLoading(false);
                 document.getElementById("guestFile").value = "";
                 document.getElementById("fileLabel").innerText = currentLang === 'ar' ? 'لم يتم اختيار ملف' : 'No file chosen';
-                return alert(currentLang === 'ar' ? "يرجى اختيار ملف بصيغة .dat فقط." : "Please select a .dat file only.");
+                return showNotification(currentLang === 'ar' ? "يرجى اختيار ملف بصيغة .dat فقط." : "Please select a .dat file only.", 'warning', 'login');
             }
             datContentToSave = await file.text();
             body = new FormData(); body.append("file", file);
         } else {
             const uid = document.getElementById("manualUid").value;
             const pwd = document.getElementById("manualPassword").value;
-            if(!uid || !pwd) { showLoading(false); return alert(currentLang === 'ar' ? "يرجى إدخال البيانات المطلوبة." : "Please enter required credentials."); }
+            if(!uid || !pwd) { showLoading(false); return showNotification(currentLang === 'ar' ? "يرجى إدخال البيانات المطلوبة." : "Please enter required credentials.", 'warning', 'login'); }
             uidToSave = uid; pwdToSave = pwd;
             body = JSON.stringify({ uid, password: pwd });
             headers = {"Content-Type": "application/json"};
@@ -983,8 +1037,8 @@
                 }
 
                 showDashboard(); updateUserInfo(); await fetchWishlist();
-            } else alert("Error: " + (data.error || "Login Failed"));
-        } catch (e) { alert("Server connection failed."); }
+            } else showNotification("Error: " + (data.error || "Login Failed"), 'error', 'login');
+        } catch (e) { showNotification("Server connection failed.", 'error', 'login'); }
         showLoading(false);
     }
 
@@ -1012,7 +1066,7 @@
                 },
                 body: JSON.stringify({ account_id: sessionStorage.getItem("uid") })
             });
-            if (res.status === 401 || res.status === 500) return handleSessionExpiry();
+            if (res.status === 401 || res.status === 403) return handleSessionExpiry();
             const data = await res.json();
             if (res.ok) {
                 myWishlistIds = (data.items || []).map(i => i.id);
@@ -1020,7 +1074,7 @@
                 renderGrid(myWishlistIds, "wishlistGrid", 'dashboard');
                 
                 const banner = document.getElementById('corruptedWarningBanner');
-                if (data.has_corrupted_item) {
+                if (data.has_corrupted_item || data.has_corrupted_items) {
                     banner.classList.remove('hidden');
                 } else {
                     banner.classList.add('hidden');
@@ -1048,12 +1102,12 @@
         
         const invalidIds = ids.filter(id => !libraryData[id]);
         if (invalidIds.length > 0) {
-            alert(currentLang === 'ar' ? `المعرفات التالية غير صالحة: ${invalidIds.join(', ')}\nيرجى إدخال معرفات صحيحة.` : `The following IDs are invalid: ${invalidIds.join(', ')}\nPlease enter valid item IDs.`);
+            showNotification(currentLang === 'ar' ? `المعرفات التالية غير صالحة: ${invalidIds.join(', ')}` : `Invalid IDs: ${invalidIds.join(', ')}`, 'error', 'dashboard');
             return;
         }
 
         if (myWishlistIds.length + ids.length > 80) {
-            alert(`${currentLang === 'ar' ? 'لا يمكن إضافة' : 'Cannot add'} ${ids.length} ${currentLang === 'ar' ? 'عنصر. الحد الأقصى هو 80 (الحالي:' : 'items. Maximum limit is 80 (Current:'} ${myWishlistIds.length}).`);
+            showNotification(currentLang === 'ar' ? `لا يمكن إضافة ${ids.length} عنصر. الحد الأقصى هو 80` : `Cannot add ${ids.length} items. Limit is 80`, 'error', 'dashboard');
             return;
         }
         await executeModifyWishlist('add', ids, 'dashboard');
@@ -1141,6 +1195,9 @@
         if (isActionRunning) return;
         isActionRunning = true;
 
+        let successCount = 0;
+        let failCount = 0;
+
         try {
             ids.sort((a, b) => a - b);
             const isBulk = ids.length > 1;
@@ -1165,7 +1222,7 @@
                         },
                         body: JSON.stringify(payload)
                     }).then((res) => {
-                        if (res.status === 401 || res.status === 500) return handleSessionExpiry();
+                        if (res.status === 401 || res.status === 403) return handleSessionExpiry();
                         if (context === 'dashboard') {
                             const el = grid.querySelector(`[data-id="${currentId}"]`);
                             if (el) el.remove();
@@ -1210,9 +1267,10 @@
                         body: JSON.stringify(payload)
                     });
 
-                    if (res.status === 401 || res.status === 500) return handleSessionExpiry();
+                    if (res.status === 401 || res.status === 403) return handleSessionExpiry();
 
                     if (res.ok) {
+                        successCount++;
                         if (action === 'add') {
                             if (!myWishlistIds.includes(currentId)) myWishlistIds.push(currentId);
                             if (context === 'dashboard') {
@@ -1228,8 +1286,12 @@
                         }
                         if (context === 'dashboard' && !isBulk) updateWishlistStats();
                         if (context === 'dashboard') fitText();
+                    } else {
+                        failCount++;
                     }
-                } catch (e) {}
+                } catch (e) {
+                    failCount++;
+                }
 
                 if (isBulk && i < ids.length - 1) {
                     if (action === 'add') {
@@ -1241,13 +1303,35 @@
             }
 
             if (isBulk) {
-                showContextProgressSuccess(context, action, ids.length);
-                await new Promise(resolve => setTimeout(resolve, 1000));
+                if (failCount === 0) {
+                    showContextProgressSuccess(context, action, successCount);
+                } else {
+                    const title = document.getElementById(context === 'dashboard' ? 'dashboardTitle' : 'searchBulkStatusText');
+                    if (context === 'dashboard') {
+                        title.innerText = currentLang === 'ar' ? `تمت الإضافة: ${successCount} | فشل: ${failCount}` : `Added: ${successCount} | Failed: ${failCount}`;
+                        title.style.color = '#FFD700';
+                    } else {
+                        title.innerHTML = `<span style="color:#FFD700;">⚠ ${currentLang === 'ar' ? `نجاح: ${successCount} | فشل: ${failCount}` : `Success: ${successCount} | Failed: ${failCount}`}</span>`;
+                        document.getElementById('searchBulkActionLabel').innerText = _t('completed');
+                    }
+                    fitText();
+                }
+                await new Promise(resolve => setTimeout(resolve, 1500));
                 showContextProgress(false, context);
             }
 
             showLoading(true, 'syncing');
             await fetchWishlist();
+
+            if (action === 'add' && failCount > 0) {
+                if (isBulk) {
+                    const msg = currentLang === 'ar' ? `اكتمل مع وجود أخطاء: فشل إضافة ${failCount} عنصر.` : `Completed with errors: failed to add ${failCount} item(s).`;
+                    showNotification(msg, 'warning', context);
+                } else {
+                    const msg = currentLang === 'ar' ? 'فشلت عملية الإضافة (عنصر غير صالح)' : 'Failed to add item (Invalid item)';
+                    showNotification(msg, 'error', context);
+                }
+            }
 
         } finally {
             showLoading(false);
@@ -1257,7 +1341,7 @@
 
     function promptClearAll() {
         if(isActionRunning) return;
-        if(myWishlistIds.length === 0) return alert(_t('emptyWishlist'));
+        if(myWishlistIds.length === 0) return showNotification(_t('emptyWishlist'), 'warning', 'dashboard');
         const modal = document.getElementById('confirmClearModal');
         modal.classList.remove('hidden');
         setTimeout(() => { modal.classList.add('show'); fitText(); }, 10);
@@ -1288,7 +1372,7 @@
         else if (context === 'search') {
             if (isSearchAddMode) {
                 if(myWishlistIds.includes(parseInt(id))) {
-                    alert(_t('alreadyIn'));
+                    showNotification(_t('alreadyIn'), 'warning', 'search');
                     return;
                 }
                 if (selectedForAdding.has(id)) {
@@ -1296,7 +1380,7 @@
                     element.classList.remove('selected-add');
                 } else {
                     if (myWishlistIds.length + selectedForAdding.size >= 80) {
-                        alert(_t('limitReached'));
+                        showNotification(currentLang === 'ar' ? 'تم الوصول للحد الأقصى للقائمة.' : 'Wishlist capacity reached.', 'error', 'search');
                         return;
                     }
                     selectedForAdding.add(id);
@@ -1444,7 +1528,7 @@
                 } else {
                     resultsDiv.innerHTML = `<p style='color:var(--red); font-weight:bold; text-align:center;'>${_t('serverFailSearch')}</p>`;
                 }
-            } catch (e) { alert(_t('errorSearch')); }
+            } catch (e) { showNotification(_t('errorSearch'), 'error', 'search'); }
             showLoading(false);
         }
     }
@@ -1462,7 +1546,7 @@
                 },
                 body: JSON.stringify({ account_id: parseInt(targetUid) })
             });
-            if (res.status === 401 || res.status === 500) return handleSessionExpiry();
+            if (res.status === 401 || res.status === 403) return handleSessionExpiry();
             const data = await res.json();
             
             if (res.ok) {
@@ -1482,7 +1566,7 @@
                 document.getElementById("searchedUserSection").classList.remove("hidden");
                 
                 const searchBanner = document.getElementById('searchCorruptedWarningBanner');
-                if (data.has_corrupted_item) {
+                if (data.has_corrupted_item || data.has_corrupted_items) {
                     searchBanner.classList.remove('hidden');
                 } else {
                     searchBanner.classList.add('hidden');
@@ -1495,9 +1579,9 @@
                 
                 renderGrid(itemsList, "searchedGrid", 'search');
             } else {
-                alert(_t('fetchFail'));
+                showNotification(_t('fetchFail'), 'error', 'search');
             }
-        } catch (e) { alert(_t('errorSearch')); }
+        } catch (e) { showNotification(_t('errorSearch'), 'error', 'search'); }
         showLoading(false);
     }
 
@@ -1538,7 +1622,7 @@
         if (isActionRunning) return;
         if(selectedForAdding.size === 0) return;
         const ids = Array.from(selectedForAdding);
-        if (myWishlistIds.length + ids.length > 80) return alert(_t('limitReached'));
+        if (myWishlistIds.length + ids.length > 80) return showNotification(currentLang === 'ar' ? 'تم الوصول للحد الأقصى للقائمة.' : 'Wishlist capacity reached.', 'error', 'search');
         await executeModifyWishlist('add', ids, 'search');
         selectedForAdding.clear();
         isSearchAddMode = false;
@@ -1551,8 +1635,8 @@
         if (isActionRunning) return;
         const allNodes = document.querySelectorAll("#searchedGrid .item-wrapper");
         const allIds = Array.from(allNodes).map(n => parseInt(n.getAttribute('data-id'))).filter(id => !myWishlistIds.includes(id));
-        if(allIds.length === 0) return alert(_t('allAdded'));
-        if(myWishlistIds.length + allIds.length > 80) return alert(`${_t('limitReached')} ${allIds.length} ${currentLang === 'ar' ? 'عنصر.' : 'items.'}`);
+        if(allIds.length === 0) return showNotification(_t('allAdded'), 'warning', 'search');
+        if(myWishlistIds.length + allIds.length > 80) return showNotification(currentLang === 'ar' ? `تم الوصول للحد الأقصى للقائمة. ${allIds.length} عنصر.` : `Wishlist capacity reached. ${allIds.length} items.`, 'error', 'search');
         await executeModifyWishlist('add', allIds, 'search');
         isSearchAddMode = false;
         selectedForAdding.clear();
@@ -1610,7 +1694,7 @@
     async function modifySingleItem(action, id, modalId, context) {
         if (isActionRunning) return;
         if (action === 'add' && myWishlistIds.length >= 80) {
-            alert(_t('limitReached'));
+            showNotification(currentLang === 'ar' ? 'تم الوصول للحد الأقصى للقائمة.' : 'Wishlist capacity reached.', 'error', context);
             return;
         }
         closeModal(modalId);
