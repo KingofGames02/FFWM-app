@@ -1046,6 +1046,12 @@
         const ids = val.split(",").map(i => parseInt(i.trim())).filter(i => !isNaN(i));
         if (!ids.length) return;
         
+        const invalidIds = ids.filter(id => !libraryData[id]);
+        if (invalidIds.length > 0) {
+            alert(currentLang === 'ar' ? `المعرفات التالية غير صالحة: ${invalidIds.join(', ')}\nيرجى إدخال معرفات صحيحة.` : `The following IDs are invalid: ${invalidIds.join(', ')}\nPlease enter valid item IDs.`);
+            return;
+        }
+
         if (myWishlistIds.length + ids.length > 80) {
             alert(`${currentLang === 'ar' ? 'لا يمكن إضافة' : 'Cannot add'} ${ids.length} ${currentLang === 'ar' ? 'عنصر. الحد الأقصى هو 80 (الحالي:' : 'items. Maximum limit is 80 (Current:'} ${myWishlistIds.length}).`);
             return;
@@ -1234,7 +1240,7 @@
                 }
             }
 
-                        if (isBulk) {
+            if (isBulk) {
                 showContextProgressSuccess(context, action, ids.length);
                 await new Promise(resolve => setTimeout(resolve, 1000));
                 showContextProgress(false, context);
