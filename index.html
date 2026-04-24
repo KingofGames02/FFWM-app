@@ -373,7 +373,7 @@
 <link rel="icon" type="image/png" href="icon.png">
 <link rel="apple-touch-icon" href="icon.png">
 <link rel="manifest" href="manifest.json">
-	</head>
+</head>
 <body>
 
     <div id="loadingOverlay" class="loader-container hidden">
@@ -423,7 +423,7 @@
             </div>
             <button class="btn-main btn-green" onclick="handleLogin('manual')"><div class="fit-container"><span class="fit-text" data-en="LOGIN WITH CREDENTIALS" data-ar="تسجيل الدخول بالبيانات">LOGIN WITH CREDENTIALS</span></div></button>
         </div>
-        <div class="session-info fit-container"><span class="fit-text" data-en="Your credentials are stored securely in session only" data-ar="يتم حفظ بياناتك بأمان في الجلسة الحالية فقط">Your credentials are stored securely in session only</span></div>
+        <div class="session-info fit-container"><span class="fit-text" data-en="Your credentials are saved securely to keep you logged in." data-ar="يتم حفظ بياناتك بأمان لإبقائك مسجل الدخول تلقائياً.">Your credentials are saved securely to keep you logged in.</span></div>
     </div>
 
     <div id="dashboard-section" class="card large hidden">
@@ -601,11 +601,50 @@
     let selectedForAdding = new Set();
     
     let currentSearchedUid = null;
-
+    let isActionRunning = false;
+    let loadingTimeout;
     let currentLang = 'en';
+
+    const defaultIconsMap = {
+        "Icon_Primecake": "Icon_Primecake.png",
+        "Icon_IAPBundle_common": "Icon_IAPBundle_common.png",
+        "FF_UI_CupMatchBox_02": "FF_UI_CupMatchBox_02.png",
+        "Icon_box_weaponskin_Random": "Icon_box_weaponskin_Random.png",
+        "Icon_HyperBook_Firedragon": "Icon_HyperBook_Firedragon.png",
+        "UI_Character_icon_AddSkill": "UI_Character_icon_AddSkill.png",
+        "UI_Icon_Privilege_Effect": "UI_Icon_Privilege_Effect.png",
+        "FF_Icon_Title_CommonIcon": "FF_Icon_Title_CommonIcon.png",
+        "FF_UI_CupMatchBox_03": "FF_UI_CupMatchBox_03.png",
+        "FF_UI_CupMatchBox_04": "FF_UI_CupMatchBox_04.png",
+        "FF_Icon_Blueprint_Base": "FF_Icon_Blueprint_Base.png",
+        "Icon_HyperBook_Rampage": "Icon_HyperBook_Rampage.png",
+        "FF_UI_Voiceitem_KOUKI43": "FF_UI_Voiceitem_KOUKI43.png",
+        "FF_UI_DoubleWheel_Box": "FF_UI_DoubleWheel_Box.png",
+        "Icon_exchange_ob27_basics_token": "Icon_exchange_ob27_basics_token.png",
+        "Icon_box_highlevel_red": "Icon_box_highlevel_red.png",
+        "Icon_box_special": "Icon_box_special.png",
+        "Icon_subscribe_package": "Icon_subscribe_package.png",
+        "Icon_EAP_Bundle_package": "Icon_EAP_Bundle_package.png",
+        "Icon_HyperBook_Inkpainting": "Icon_HyperBook_Inkpainting.png",
+        "FF_Lottery_spin_shards_ramadan_2025": "FF_Lottery_spin_shards_ramadan_2025.png",
+        "Icon_box_3": "Icon_box_3.png",
+        "Icon_HyperBook_Free": "Icon_HyperBook_Free.png",
+        "Icon_HyperBook_Theboy": "Icon_HyperBook_Theboy.png",
+        "Icon_FF_CupMatch_cscup": "Icon_FF_CupMatch_cscup.png",
+        "Icon_HyperBook_Cityhero": "Icon_HyperBook_Cityhero.png",
+        "Icon_HyperBook_Growth": "Icon_HyperBook_Growth.png",
+        "Icon_HyperBook_Persona": "Icon_HyperBook_Persona.png",
+        "FF_UI_CupMatchBox_01": "FF_UI_CupMatchBox_01.png",
+        "FF_Lottery_UniversalRing_Token": "FF_Lottery_UniversalRing_Token.png",
+        "Icon_OptionalBundle_default": "Icon_OptionalBundle_default.png",
+        "Icon_voucher": "Icon_voucher.png"
+    };
 
     const langDict = {
         processing: { en: "PROCESSING...", ar: "جاري المعالجة..." },
+        loggingIn: { en: "LOGGING IN...", ar: "جاري تسجيل الدخول..." },
+        loading: { en: "LOADING...", ar: "جاري التحميل..." },
+        syncing: { en: "SYNCING WISHLIST...", ar: "جاري مزامنة القائمة..." },
         adding: { en: "ADDING", ar: "جاري الإضافة" },
         removing: { en: "REMOVING", ar: "جاري الإزالة" },
         completed: { en: "COMPLETED", ar: "اكتمل" },
@@ -661,6 +700,7 @@
     }
 
     function switchLanguage() {
+        if (isActionRunning) return;
         const urlParams = new URLSearchParams(window.location.search);
         if (currentLang === 'en') {
             urlParams.set('lang', 'ar');
@@ -687,10 +727,18 @@
 
     window.addEventListener('resize', fitText);
 
+    function getIconUrl(id) {
+        const item = libraryData[id];
+        if (item && item.IconInAB === "Normal" && item.icon && defaultIconsMap[item.icon]) {
+            return `${GITHUB_BASE}/RareBG_Quality/Default_icons/${defaultIconsMap[item.icon]}`;
+        }
+        return `${GITHUB_BASE}/icons/${id}.png`;
+    }
+
     async function init() {
         detectLanguage();
         applyTranslations();
-        showLoading(true);
+        showLoading(true, 'loading');
         try {
             const dataFile = currentLang === 'ar' ? 'ItemsData_ar.json' : 'ItemsData_en.json';
             const res = await fetch(`${GITHUB_BASE}/${dataFile}`);
@@ -700,9 +748,55 @@
             }
         } catch (e) { }
         
-        if (sessionStorage.getItem("token")) { showDashboard(); updateUserInfo(); fetchWishlist(); }
-        showLoading(false);
+        if (sessionStorage.getItem("token")) { 
+            showDashboard(); updateUserInfo(); await fetchWishlist(); 
+            showLoading(false);
+        } else if (localStorage.getItem('ff_auto_type')) {
+            const success = await performAutoLogin();
+            if (!success) showLoading(false);
+        } else {
+            showLoading(false);
+        }
         setTimeout(fitText, 100);
+    }
+
+    async function performAutoLogin() {
+        const type = localStorage.getItem('ff_auto_type');
+        if (!type) return false;
+
+        let body, headers = {};
+        if (type === 'file') {
+            const datContent = localStorage.getItem('ff_auto_dat');
+            if (!datContent) return false;
+            const file = new File([datContent], "GUEST100067.DAT", {type: "text/plain"});
+            body = new FormData();
+            body.append("file", file);
+        } else {
+            const uid = localStorage.getItem('ff_auto_uid');
+            const pwd = localStorage.getItem('ff_auto_pwd');
+            if (!uid || !pwd) return false;
+            body = JSON.stringify({ uid, password: pwd });
+            headers = {"Content-Type": "application/json"};
+        }
+
+        showLoading(true, 'loggingIn');
+        try {
+            const res = await fetch(`${API_BASE}/login`, { method: "POST", headers, body });
+            const data = await res.json();
+            if (res.ok) {
+                Object.keys(data).forEach(k => sessionStorage.setItem(k, data[k]));
+                showDashboard(); 
+                updateUserInfo(); 
+                await fetchWishlist();
+                showLoading(false);
+                return true;
+            } else {
+                logout();
+                return false;
+            }
+        } catch (e) { 
+            return false; 
+        }
     }
 
     function toggleLoginMode() {
@@ -729,6 +823,7 @@
     }
 
     function showSearchInterface() {
+        if (isActionRunning) return;
         document.querySelectorAll('.card').forEach(c => c.classList.add('hidden'));
         document.getElementById("search-section").classList.remove("hidden");
         document.getElementById("searchResults").innerHTML = "";
@@ -737,15 +832,24 @@
     }
 
     function backToDashboard() { 
+        if (isActionRunning) return;
         showDashboard(); 
         isRemoveMode = false; selectedForRemoval.clear(); updateRemoveUIButtonOnly();
         renderGrid(myWishlistIds, "wishlistGrid", 'dashboard');
     }
     
-    function showLoading(s) { 
+    function showLoading(s, msgKey = 'processing') { 
         const overlay = document.getElementById("loadingOverlay");
-        if(s) { overlay.classList.remove("hidden"); setTimeout(()=> {overlay.style.opacity = '1'; fitText();}, 10); }
-        else { overlay.style.opacity = '0'; setTimeout(()=> overlay.classList.add("hidden"), 400); }
+        if(s) { 
+            clearTimeout(loadingTimeout);
+            document.getElementById('txtProcessing').innerText = _t(msgKey);
+            overlay.classList.remove("hidden"); 
+            setTimeout(()=> {overlay.style.opacity = '1'; fitText();}, 10); 
+        }
+        else { 
+            overlay.style.opacity = '0'; 
+            loadingTimeout = setTimeout(()=> overlay.classList.add("hidden"), 400); 
+        }
     }
 
     function showContextProgress(show, context, action = '', current = 0, total = 0) {
@@ -757,6 +861,7 @@
             
             if (!show) {
                 title.innerText = _t('myWishlist');
+                title.style.color = '#fff';
                 updateWishlistStats(); 
                 fitText();
                 return;
@@ -765,6 +870,7 @@
             fill.classList.remove('full');
             const isAdd = action === 'add';
             title.innerText = isAdd ? _t('adding') : _t('removing');
+            title.style.color = '#fff';
             fill.style.background = isAdd ? 'var(--green)' : 'var(--red)';
             countMax.innerText = ' / ' + total;
             countCurr.innerText = current;
@@ -814,7 +920,6 @@
             document.getElementById('dashboardTitle').style.color = color;
             document.getElementById('countCurrent').innerText = total;
             fitText();
-            setTimeout(() => { document.getElementById('dashboardTitle').style.color = '#fff'; }, 2000);
         } else if (context === 'search') {
             const icon = isAdd ? '✓' : '✕';
             document.getElementById('searchBulkStatusText').innerHTML = `<span style="color:${color};">${icon} ${text}</span>`;
@@ -822,9 +927,26 @@
         }
     }
 
+    function logout() { 
+        sessionStorage.clear(); 
+        localStorage.removeItem('ff_auto_type');
+        localStorage.removeItem('ff_auto_uid');
+        localStorage.removeItem('ff_auto_pwd');
+        localStorage.removeItem('ff_auto_dat');
+        location.reload(); 
+    }
+
+    function handleSessionExpiry() {
+        alert(currentLang === 'ar' ? 'انتهت صلاحية الجلسة، جاري التحديث تلقائياً...' : 'Session expired, refreshing automatically...');
+        location.reload();
+    }
+
     async function handleLogin(type) {
-        showLoading(true);
+        showLoading(true, 'processing');
         let body, headers = {};
+        let datContentToSave = null;
+        let uidToSave = null, pwdToSave = null;
+
         if (type === 'file') {
             const file = document.getElementById("guestFile").files[0];
             if (!file) { showLoading(false); return alert(currentLang === 'ar' ? "يرجى اختيار ملف أولاً." : "Please select a file first."); }
@@ -835,12 +957,13 @@
                 document.getElementById("fileLabel").innerText = currentLang === 'ar' ? 'لم يتم اختيار ملف' : 'No file chosen';
                 return alert(currentLang === 'ar' ? "يرجى اختيار ملف بصيغة .dat فقط." : "Please select a .dat file only.");
             }
-
+            datContentToSave = await file.text();
             body = new FormData(); body.append("file", file);
         } else {
             const uid = document.getElementById("manualUid").value;
             const pwd = document.getElementById("manualPassword").value;
             if(!uid || !pwd) { showLoading(false); return alert(currentLang === 'ar' ? "يرجى إدخال البيانات المطلوبة." : "Please enter required credentials."); }
+            uidToSave = uid; pwdToSave = pwd;
             body = JSON.stringify({ uid, password: pwd });
             headers = {"Content-Type": "application/json"};
         }
@@ -850,7 +973,16 @@
             const data = await res.json();
             if (res.ok) {
                 Object.keys(data).forEach(k => sessionStorage.setItem(k, data[k]));
-                showDashboard(); updateUserInfo(); fetchWishlist();
+                
+                localStorage.setItem('ff_auto_type', type);
+                if(type === 'file') {
+                    localStorage.setItem('ff_auto_dat', datContentToSave);
+                } else {
+                    localStorage.setItem('ff_auto_uid', uidToSave);
+                    localStorage.setItem('ff_auto_pwd', pwdToSave);
+                }
+
+                showDashboard(); updateUserInfo(); await fetchWishlist();
             } else alert("Error: " + (data.error || "Login Failed"));
         } catch (e) { alert("Server connection failed."); }
         showLoading(false);
@@ -868,8 +1000,6 @@
         btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 20px; height: 20px; min-width: 20px; min-height: 20px; flex-shrink: 0; display:block;"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
         setTimeout(() => { btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 20px; height: 20px; min-width: 20px; min-height: 20px; flex-shrink: 0; display:block;"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"></path></svg>`; }, 2000);
     }
-    
-    function logout() { sessionStorage.clear(); location.reload(); }
 
     async function fetchWishlist() {
         try {
@@ -882,6 +1012,7 @@
                 },
                 body: JSON.stringify({ account_id: sessionStorage.getItem("uid") })
             });
+            if (res.status === 401 || res.status === 500) return handleSessionExpiry();
             const data = await res.json();
             if (res.ok) {
                 myWishlistIds = (data.items || []).map(i => i.id);
@@ -910,6 +1041,7 @@
     }
 
     async function processAddInput() {
+        if (isActionRunning) return;
         const val = document.getElementById("targetIds").value;
         const ids = val.split(",").map(i => parseInt(i.trim())).filter(i => !isNaN(i));
         if (!ids.length) return;
@@ -937,6 +1069,7 @@
     }
 
     function toggleRemoveMode() {
+        if (isActionRunning) return;
         if (!isRemoveMode) {
             isRemoveMode = true;
             selectedForRemoval.clear();
@@ -959,65 +1092,165 @@
         }
     }
 
-    async function executeModifyWishlist(action, ids, context) {
+    function createItemElement(id, context) {
+        const item = libraryData[id] || {};
+        let rare = "COMMON";
+        if (item.Rare && item.Rare.toUpperCase() !== "NONE") rare = item.Rare.toUpperCase();
+        
+        const bgUrl = `${GITHUB_BASE}/RareBG_Quality/${rare}.png`;
+        const iconUrl = getIconUrl(id);
+        
+        const wrapper = document.createElement("div");
+        wrapper.className = "item-wrapper";
+        wrapper.setAttribute('data-id', id);
+        wrapper.onclick = function() { handleCardClick(id, context, this); };
+
+        const box = document.createElement("div");
+        box.className = "item-box-top";
+        box.style.backgroundImage = `url('${bgUrl}')`;
+        
+        const img = document.createElement("img");
+        img.className = "card-icon";
+        img.src = iconUrl;
+        img.onerror = function() { this.onerror = null; this.src = `${GITHUB_BASE}/RareBG_Quality/UNKNOWN.png`; };
+        
+        img.onload = function() {
+            if (this.naturalWidth === 300 && this.naturalHeight === 90) {
+                this.classList.add('weapon-tilt');
+            }
+        };
+
+        const tagContainer = document.createElement("div");
+        tagContainer.className = "item-id-bottom fit-container";
+        tagContainer.innerHTML = `<span class="fit-text">${id}</span>`;
+
+        box.appendChild(img);
+        wrapper.appendChild(box);
+        wrapper.appendChild(tagContainer);
+        return wrapper;
+    }
+
+    async function executeModifyWishlist(action, ids, context, isInstant = false) {
         if (!ids.length) return;
-        ids.sort((a, b) => a - b);
-        const isBulk = ids.length > 1;
+        if (isActionRunning) return;
+        isActionRunning = true;
 
-        if (isBulk) {
-            showContextProgress(true, context, action, 0, ids.length);
-        } else {
-            showLoading(true);
-        }
+        try {
+            ids.sort((a, b) => a - b);
+            const isBulk = ids.length > 1;
+            const grid = document.getElementById(context === 'dashboard' ? 'wishlistGrid' : 'searchedGrid');
 
-        for (let i = 0; i < ids.length; i++) {
-            if (isBulk) updateContextProgress(context, action, i + 1, ids.length);
-            
-            const currentId = ids[i];
-            const payload = {
-                add_ids: action === 'add' ? [currentId] : [],
-                del_ids: action === 'remove' ? [currentId] : [],
-                add_src: action === 'add' ? ["WishList"] : [],
-                del_src: action === 'remove' ? ["WishList"] : []
-            };
+            if (isInstant && action === 'remove') {
+                showLoading(true, 'loading');
+                const promises = ids.map((currentId, i) => {
+                    const payload = {
+                        add_ids: [],
+                        del_ids: [currentId],
+                        add_src: [],
+                        del_src: ["WishList"]
+                    };
 
-            try {
-                await fetch(`${API_BASE}/wishlist/update`, {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "Authorization": sessionStorage.getItem("token"),
-                        "Server-Url": sessionStorage.getItem("server_url")
-                    },
-                    body: JSON.stringify(payload)
+                    return fetch(`${API_BASE}/wishlist/update`, {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Authorization": sessionStorage.getItem("token"),
+                            "Server-Url": sessionStorage.getItem("server_url")
+                        },
+                        body: JSON.stringify(payload)
+                    }).then((res) => {
+                        if (res.status === 401 || res.status === 500) return handleSessionExpiry();
+                        if (context === 'dashboard') {
+                            const el = grid.querySelector(`[data-id="${currentId}"]`);
+                            if (el) el.remove();
+                        }
+                    }).catch(e => {});
                 });
-            } catch (e) {
-                console.error("Error updating item", currentId);
+
+                await Promise.all(promises);
+                if (context === 'dashboard') {
+                    myWishlistIds = myWishlistIds.filter(id => !ids.includes(id));
+                }
+                showLoading(true, 'syncing');
+                await fetchWishlist();
+                return;
             }
 
-                        if (isBulk && i < ids.length - 1) {
-                if (action === 'add') {
-                    await new Promise(resolve => setTimeout(resolve, 300));
-                } else if (action === 'remove') {
-                    await new Promise(resolve => setTimeout(resolve, 0));
+            if (isBulk) {
+                showContextProgress(true, context, action, 0, ids.length);
+            } else {
+                showLoading(true, context === 'search' ? 'loading' : 'processing');
+            }
+
+            for (let i = 0; i < ids.length; i++) {
+                if (isBulk) updateContextProgress(context, action, i + 1, ids.length);
+                
+                const currentId = ids[i];
+                const payload = {
+                    add_ids: action === 'add' ? [currentId] : [],
+                    del_ids: action === 'remove' ? [currentId] : [],
+                    add_src: action === 'add' ? ["WishList"] : [],
+                    del_src: action === 'remove' ? ["WishList"] : []
+                };
+
+                try {
+                    const res = await fetch(`${API_BASE}/wishlist/update`, {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Authorization": sessionStorage.getItem("token"),
+                            "Server-Url": sessionStorage.getItem("server_url")
+                        },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (res.status === 401 || res.status === 500) return handleSessionExpiry();
+
+                    if (res.ok) {
+                        if (action === 'add') {
+                            if (!myWishlistIds.includes(currentId)) myWishlistIds.push(currentId);
+                            if (context === 'dashboard') {
+                                const newEl = createItemElement(currentId, 'dashboard');
+                                grid.appendChild(newEl);
+                            }
+                        } else {
+                            if (context === 'dashboard') {
+                                const el = grid.querySelector(`[data-id="${currentId}"]`);
+                                if (el) el.remove();
+                                myWishlistIds = myWishlistIds.filter(id => id !== currentId);
+                            }
+                        }
+                        if (context === 'dashboard' && !isBulk) updateWishlistStats();
+                        if (context === 'dashboard') fitText();
+                    }
+                } catch (e) {}
+
+                if (isBulk && i < ids.length - 1) {
+                    if (action === 'add') {
+                        await new Promise(resolve => setTimeout(resolve, 300));
+                    } else if (action === 'remove') {
+                        await new Promise(resolve => setTimeout(resolve, 10));
+                    }
                 }
             }
-        }
 
-        if (isBulk) {
-            showContextProgressSuccess(context, action, ids.length);
-            await new Promise(resolve => setTimeout(resolve, 2000));
-            showContextProgress(false, context);
-        } else {
+                        if (isBulk) {
+                showContextProgressSuccess(context, action, ids.length);
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                showContextProgress(false, context);
+            }
+
+            showLoading(true, 'syncing');
+            await fetchWishlist();
+
+        } finally {
             showLoading(false);
+            isActionRunning = false;
         }
-
-        showLoading(true);
-        await fetchWishlist();
-        showLoading(false);
     }
 
     function promptClearAll() {
+        if(isActionRunning) return;
         if(myWishlistIds.length === 0) return alert(_t('emptyWishlist'));
         const modal = document.getElementById('confirmClearModal');
         modal.classList.remove('hidden');
@@ -1025,11 +1258,13 @@
     }
     
     function executeClearAll() {
+        if(isActionRunning) return;
         closeModal('confirmClearModal');
-        executeModifyWishlist('remove', myWishlistIds, 'dashboard');
+        executeModifyWishlist('remove', myWishlistIds, 'dashboard', true);
     }
 
     function handleCardClick(id, context, element) {
+        if (isActionRunning) return;
         if (context === 'dashboard') {
             if (isRemoveMode) {
                 if (selectedForRemoval.has(id)) {
@@ -1046,11 +1281,18 @@
         } 
         else if (context === 'search') {
             if (isSearchAddMode) {
-                if(myWishlistIds.includes(parseInt(id))) return;
+                if(myWishlistIds.includes(parseInt(id))) {
+                    alert(_t('alreadyIn'));
+                    return;
+                }
                 if (selectedForAdding.has(id)) {
                     selectedForAdding.delete(id);
                     element.classList.remove('selected-add');
                 } else {
+                    if (myWishlistIds.length + selectedForAdding.size >= 80) {
+                        alert(_t('limitReached'));
+                        return;
+                    }
                     selectedForAdding.add(id);
                     element.classList.add('selected-add');
                 }
@@ -1071,7 +1313,7 @@
             if (item.Rare && item.Rare.toUpperCase() !== "NONE") rare = item.Rare.toUpperCase();
             
             const bgUrl = `${GITHUB_BASE}/RareBG_Quality/${rare}.png`;
-            const iconUrl = `${GITHUB_BASE}/icons/${id}.png`;
+            const iconUrl = getIconUrl(id);
             
             const wrapper = document.createElement("div");
             wrapper.className = "item-wrapper";
@@ -1122,10 +1364,11 @@
     }
 
     async function performSearch() {
+        if (isActionRunning) return;
         const query = document.getElementById("searchInput").value.trim();
         if (!query) return;
         
-        showLoading(true);
+        showLoading(true, 'loading');
         const resultsDiv = document.getElementById("searchResults");
         const userSection = document.getElementById("searchedUserSection");
         resultsDiv.innerHTML = "";
@@ -1196,12 +1439,13 @@
                     resultsDiv.innerHTML = `<p style='color:var(--red); font-weight:bold; text-align:center;'>${_t('serverFailSearch')}</p>`;
                 }
             } catch (e) { alert(_t('errorSearch')); }
+            showLoading(false);
         }
-        showLoading(false);
     }
 
     async function fetchExternalWishlist(targetUid, nick = "Unknown", region = "Unknown") {
-        showLoading(true);
+        if (isActionRunning) return;
+        showLoading(true, 'loading');
         try {
             const res = await fetch(`${API_BASE}/wishlist`, {
                 method: "POST",
@@ -1212,6 +1456,7 @@
                 },
                 body: JSON.stringify({ account_id: parseInt(targetUid) })
             });
+            if (res.status === 401 || res.status === 500) return handleSessionExpiry();
             const data = await res.json();
             
             if (res.ok) {
@@ -1265,6 +1510,7 @@
     }
 
     function toggleSearchAddMode() {
+        if (isActionRunning) return;
         if (!isSearchAddMode) {
             isSearchAddMode = true;
             selectedForAdding.clear();
@@ -1283,6 +1529,7 @@
     }
 
     async function executeSearchBulkAdd() {
+        if (isActionRunning) return;
         if(selectedForAdding.size === 0) return;
         const ids = Array.from(selectedForAdding);
         if (myWishlistIds.length + ids.length > 80) return alert(_t('limitReached'));
@@ -1295,6 +1542,7 @@
     }
 
     async function addAllSearchItems() {
+        if (isActionRunning) return;
         const allNodes = document.querySelectorAll("#searchedGrid .item-wrapper");
         const allIds = Array.from(allNodes).map(n => parseInt(n.getAttribute('data-id'))).filter(id => !myWishlistIds.includes(id));
         if(allIds.length === 0) return alert(_t('allAdded'));
@@ -1306,6 +1554,7 @@
     }
 
     function showItemDetail(id, context) {
+        if (isActionRunning) return;
         const modal = document.getElementById("itemModal");
         const actionArea = document.getElementById("modalActionArea");
         const iconEl = document.getElementById("modalIcon");
@@ -1332,7 +1581,7 @@
         
         iconEl.onload = checkModalTilt;
         iconEl.onerror = function() { this.onerror = null; this.src = `${GITHUB_BASE}/RareBG_Quality/UNKNOWN.png`; };
-        iconEl.src = `${GITHUB_BASE}/icons/${id}.png`;
+        iconEl.src = getIconUrl(id);
         
         if(iconEl.complete && iconEl.naturalWidth !== 0) {
             checkModalTilt.call(iconEl);
@@ -1353,7 +1602,13 @@
     }
 
     async function modifySingleItem(action, id, modalId, context) {
+        if (isActionRunning) return;
+        if (action === 'add' && myWishlistIds.length >= 80) {
+            alert(_t('limitReached'));
+            return;
+        }
         closeModal(modalId);
+        showLoading(true, 'processing');
         await executeModifyWishlist(action, [id], context);
     }
 
