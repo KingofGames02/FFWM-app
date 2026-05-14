@@ -367,6 +367,26 @@
         .confirm-actions { display: flex; gap: 10px; margin-top: 20px; width: 100%; }
         .modal-text { color: var(--muted); font-size: 0.9rem; margin-bottom: 25px; line-height: 1.5; }
 
+        .is-loading {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .is-loading::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(110deg, transparent 20%, rgba(255, 255, 255, 0.2) 50%, transparent 80%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite linear;
+            z-index: 5;
+        }
+
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
         @media (max-width: 380px) {
             .nav-grid { flex-direction: column; }
             .action-row { flex-direction: column; }
@@ -767,7 +787,11 @@
                     return;
                 }
             }
-            this.onerror = null;
+            this.onerror = function() {
+                this.style.opacity = '1';
+                const loaderNode = this.closest('.is-loading');
+                if(loaderNode) loaderNode.classList.remove('is-loading');
+            };
             this.src = `${GITHUB_BASE}/RareBG_Quality/UNKNOWN.png`;
         };
         imgElement.src = `${ICONS_BASE}/${id}.png`;
@@ -1148,13 +1172,18 @@
         wrapper.onclick = function() { handleCardClick(id, context, this); };
 
         const box = document.createElement("div");
-        box.className = "item-box-top";
+        box.className = "item-box-top is-loading";
         box.style.backgroundImage = `url('${bgUrl}')`;
         
         const img = document.createElement("img");
         img.className = "card-icon";
+        img.style.opacity = "0";
+        img.style.transition = "opacity 0.4s ease";
         
         img.onload = function() {
+            const loaderNode = this.closest('.is-loading');
+            if(loaderNode) loaderNode.classList.remove('is-loading');
+            this.style.opacity = '1';
             if (this.naturalWidth === 300 && this.naturalHeight === 90) {
                 this.classList.add('weapon-tilt');
             }
@@ -1396,14 +1425,19 @@
             wrapper.onclick = function() { handleCardClick(id, context, this); };
 
             const box = document.createElement("div");
-            box.className = "item-box-top";
+            box.className = "item-box-top is-loading";
             box.style.backgroundImage = `url('${bgUrl}')`;
             
             const img = document.createElement("img");
             img.className = "card-icon";
             img.loading = "lazy";
+            img.style.opacity = "0";
+            img.style.transition = "opacity 0.4s ease";
             
             const checkGridTilt = function() {
+                const loaderNode = this.closest('.is-loading');
+                if(loaderNode) loaderNode.classList.remove('is-loading');
+                this.style.opacity = '1';
                 if (this.naturalWidth === 300 && this.naturalHeight === 90) {
                     this.classList.add('weapon-tilt');
                 }
@@ -1628,7 +1662,11 @@
         const modal = document.getElementById("itemModal");
         const actionArea = document.getElementById("modalActionArea");
         const iconEl = document.getElementById("modalIcon");
+        const wrapperEl = document.querySelector(".modal-icon-wrapper");
         
+        wrapperEl.classList.add('is-loading');
+        iconEl.style.opacity = "0";
+        iconEl.style.transition = "opacity 0.4s ease";
         iconEl.classList.remove('weapon-tilt');
         
         const item = libraryData[id] || {};
@@ -1644,6 +1682,9 @@
         iconEl.className = "large-icon";
         
         const checkModalTilt = function() { 
+            const loaderNode = this.closest('.is-loading');
+            if(loaderNode) loaderNode.classList.remove('is-loading');
+            this.style.opacity = '1';
             if (this.naturalWidth === 300 && this.naturalHeight === 90) {
                 this.classList.add('weapon-tilt'); 
             }
