@@ -397,7 +397,7 @@
 <link rel="apple-touch-icon" href="icon.png">
 <link rel="manifest" href="manifest.json">
 <script>
-    const APP_VERSION = "1.0";
+    const APP_VERSION = "1.0.0";
     if (localStorage.getItem("app_version") !== APP_VERSION) {
         localStorage.setItem("app_version", APP_VERSION);
         const urlParams = new URLSearchParams(window.location.search);
@@ -640,6 +640,7 @@
     const ICONS_BASE = "https://raw.githubusercontent.com/KingofGames02/Free-Fire-Items-Library/main/ff-icons";
     let libraryData = {};
     let myWishlistIds = [];
+    let updatedIconsSet = new Set();
     
     let isRemoveMode = false;
     let selectedForRemoval = new Set();
@@ -777,24 +778,30 @@
     }
 
     function setupIconFallback(imgElement, id) {
-        imgElement.dataset.step = "0";
+        const item = libraryData[id] || {};
+        const idStr = String(id);
+        const iconStr = item.icon ? String(item.icon) : null;
+        const urls = [];
+        if (updatedIconsSet.has(idStr)) urls.push(`${ICONS_BASE}/${idStr}_2.png`);
+        urls.push(`${ICONS_BASE}/${idStr}.png`);
+        if (iconStr) {
+            if (updatedIconsSet.has(iconStr)) urls.push(`${ICONS_BASE}/${iconStr}_2.png`);
+            urls.push(`${ICONS_BASE}/${iconStr}.png`);
+        }
+        urls.push(`${GITHUB_BASE}/RareBG_Quality/UNKNOWN.png`);
+        let currentIdx = 0;
         imgElement.onerror = function() {
-            if (this.dataset.step === "0") {
-                this.dataset.step = "1";
-                const item = libraryData[id];
-                if (item && item.icon) {
-                    this.src = `${ICONS_BASE}/${item.icon}.png`;
-                    return;
-                }
-            }
-            this.onerror = function() {
+            currentIdx++;
+            if (currentIdx < urls.length) {
+                this.src = urls[currentIdx];
+            } else {
+                this.onerror = null;
                 this.style.opacity = '1';
                 const loaderNode = this.closest('.is-loading');
                 if(loaderNode) loaderNode.classList.remove('is-loading');
-            };
-            this.src = `${GITHUB_BASE}/RareBG_Quality/UNKNOWN.png`;
+            }
         };
-        imgElement.src = `${ICONS_BASE}/${id}.png`;
+        imgElement.src = urls[0];
     }
 
     async function init() {
@@ -803,10 +810,17 @@
         showLoading(true, 'loading');
         try {
             const dataFile = currentLang === 'ar' ? 'ItemsData_ar.json' : 'ItemsData_en.json';
-            const res = await fetch(`${GITHUB_BASE}/${dataFile}?v=${APP_VERSION}`);
-            if (res.ok) {
-                const data = await res.json();
+            const [resData, resUpdated] = await Promise.all([
+                fetch(`${GITHUB_BASE}/${dataFile}?v=${APP_VERSION}`),
+                fetch(`${GITHUB_BASE}/updated_icons.json?v=${APP_VERSION}`)
+            ]);
+            if (resData.ok) {
+                const data = await resData.json();
                 libraryData = data.reduce((acc, item) => { acc[item.itemID] = item; return acc; }, {});
+            }
+            if (resUpdated.ok) {
+                const updatedArr = await resUpdated.json();
+                updatedIconsSet = new Set(updatedArr);
             }
         } catch (e) { }
         
