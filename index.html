@@ -397,7 +397,7 @@
 <link rel="apple-touch-icon" href="icon.png">
 <link rel="manifest" href="manifest.json">
 <script>
-    const APP_VERSION = "1.0.0";
+    const APP_VERSION = "1.0.1";
     if (localStorage.getItem("app_version") !== APP_VERSION) {
         localStorage.setItem("app_version", APP_VERSION);
         const urlParams = new URLSearchParams(window.location.search);
@@ -635,7 +635,7 @@
     </div>
 
 <script>
-    const API_BASE = "https://kog-ffwm.vercel.app/api";
+    const API_BASE = "https://kog-api-gateway.vercel.app/api/wishlist/account";
     const GITHUB_BASE = "https://raw.githubusercontent.com/KingofGames02/Free-Fire-Items-Library/main";
     const ICONS_BASE = "https://raw.githubusercontent.com/KingofGames02/Free-Fire-Items-Library/main/ff-icons";
     let libraryData = {};
