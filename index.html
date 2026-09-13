@@ -79,14 +79,6 @@
             0% { opacity: 0.7; } 50% { opacity: 1; text-shadow: 0 0 10px var(--green); } 100% { opacity: 0.7; }
         }
 
-        .lang-toggle-btn {
-            display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-            background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 12px;
-            padding: 8px 16px; margin-top: 15px; cursor: pointer; color: var(--accent); font-weight: 700;
-            font-size: 0.85rem; transition: all 0.3s;
-        }
-        .lang-toggle-btn:hover { border-color: var(--accent); background: rgba(74, 120, 194, 0.1); transform: translateY(-2px); }
-
         .card {
             background: linear-gradient(145deg, var(--card-bg), #051329);
             border: 1px solid var(--border); border-radius: var(--radius);
@@ -194,7 +186,7 @@
 
         .user-card {
             background: rgba(0, 0, 0, 0.3); border-radius: var(--radius); padding: 15px 20px;
-            display: flex; align-items: center; gap: 15px; margin-bottom: 25px;
+            display: flex; flex-direction: column; gap: 15px; margin-bottom: 25px;
             border: 1px solid var(--border); border-inline-start: 4px solid var(--green); width: 100%;
         }
         .avatar-circle {
@@ -225,39 +217,40 @@
         .btn-copy:hover { background: rgba(0, 230, 118, 0.1); color: var(--green); border-color: var(--green); transform: translateY(-2px); }
         .btn-exit:hover { background: rgba(255, 82, 82, 0.1); color: var(--red); border-color: var(--red); transform: translateY(-2px); }
 
+        .lang-selector-wrapper { width: 100%; position: relative; }
+        .lang-selector-wrapper select {
+            width: 100%; padding: 14px 16px; border-radius: 12px; border: 1px solid var(--border);
+            background-color: rgba(0,0,0,0.4); color: #fff; font-family: inherit; font-size: 0.95rem; font-weight: bold;
+            cursor: pointer; outline: none; appearance: none; -webkit-appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%23e0e8f2' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat; background-position: right 15px center;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        html[dir="rtl"] .lang-selector-wrapper select { background-position: left 15px center; }
+        .lang-selector-wrapper select:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(74, 120, 194, 0.2); }
+        .lang-selector-wrapper option { background-color: var(--card-bg); color: var(--text); }
+
         .nav-grid { display: flex; gap: 12px; margin-bottom: 25px; width: 100%; }
         .nav-grid .btn-main { text-decoration: none; flex: 1; padding: 12px 10px; }
 
         .action-row { display: flex; gap: 12px; margin-bottom: 5px; width: 100%; }
         
         .instruction-box {
-            background: rgba(0, 0, 0, 0.3);
-            border: 1px solid rgba(255, 215, 0, 0.2);
-            border-radius: 12px;
-            padding: 12px;
-            margin-bottom: 20px;
-            width: 100%;
-            margin-top: 10px;
+            background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(255, 215, 0, 0.2);
+            border-radius: 12px; padding: 12px; margin-bottom: 20px; width: 100%; margin-top: 10px;
         }
         .instruction-text {
             color: #FFD700; font-size: 0.8rem; text-align: center;
-            font-weight: 700; white-space: nowrap; 
-            animation: softGlow 2s infinite alternate;
+            font-weight: 700; white-space: nowrap; animation: softGlow 2s infinite alternate;
         }
 
         .warning-box {
-            background: rgba(213, 0, 0, 0.15);
-            border: 1px solid rgba(255, 82, 82, 0.5);
-            border-radius: 12px;
-            padding: 12px;
-            margin-bottom: 20px;
-            width: 100%;
-            margin-top: 10px;
+            background: rgba(213, 0, 0, 0.15); border: 1px solid rgba(255, 82, 82, 0.5);
+            border-radius: 12px; padding: 12px; margin-bottom: 20px; width: 100%; margin-top: 10px;
         }
         .warning-text {
             color: var(--red); font-size: 0.85rem; text-align: center;
-            font-weight: 800; white-space: nowrap; 
-            text-shadow: 0 0 10px rgba(255, 82, 82, 0.4);
+            font-weight: 800; white-space: nowrap; text-shadow: 0 0 10px rgba(255, 82, 82, 0.4);
         }
 
         @keyframes softGlow {
@@ -281,8 +274,7 @@
         .item-wrapper {
             display: flex; flex-direction: column; background: #0c121e; border-radius: 16px;
             border: 1px solid rgba(255,255,255,0.06); padding: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-            cursor: pointer; transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); position: relative;
-            gap: 8px;
+            cursor: pointer; transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); position: relative; gap: 8px;
         }
         .item-wrapper:active { transform: scale(0.92); box-shadow: 0 2px 8px var(--accent); border-color: var(--accent); }
         .item-wrapper.selected-remove { border: 2px solid var(--red); box-shadow: 0 0 15px rgba(255, 82, 82, 0.5); transform: scale(0.95); }
@@ -303,7 +295,7 @@
             border-radius: 10px; overflow: hidden;
         }
         .card-icon { width: 85%; height: 85%; object-fit: contain; z-index: 2; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.6)); transition: transform 0.3s ease; }
-        .card-icon.weapon-tilt { transform: rotate(25deg) scale(1.25); }
+        .card-icon.weapon-tilt { transform: rotate(25deg) scale(1.25) !important; }
 
         .item-id-bottom {
             background: transparent; width: 100%; text-align: center; padding: 4px 2px;
@@ -367,25 +359,13 @@
         .confirm-actions { display: flex; gap: 10px; margin-top: 20px; width: 100%; }
         .modal-text { color: var(--muted); font-size: 0.9rem; margin-bottom: 25px; line-height: 1.5; }
 
-        .is-loading {
-            position: relative;
-            overflow: hidden;
-        }
-
+        .is-loading { position: relative; overflow: hidden; }
         .is-loading::after {
-            content: '';
-            position: absolute;
-            inset: 0;
+            content: ''; position: absolute; inset: 0;
             background: linear-gradient(110deg, transparent 20%, rgba(255, 255, 255, 0.2) 50%, transparent 80%);
-            background-size: 200% 100%;
-            animation: shimmer 1.5s infinite linear;
-            z-index: 5;
+            background-size: 200% 100%; animation: shimmer 1.5s infinite linear; z-index: 5;
         }
-
-        @keyframes shimmer {
-            0% { background-position: 200% 0; }
-            100% { background-position: -200% 0; }
-        }
+        @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 
         @media (max-width: 380px) {
             .nav-grid { flex-direction: column; }
@@ -397,7 +377,7 @@
 <link rel="apple-touch-icon" href="icon.png">
 <link rel="manifest" href="manifest.json">
 <script>
-    const APP_VERSION = "1.0.1";
+    const APP_VERSION = "2.0.0";
     if (localStorage.getItem("app_version") !== APP_VERSION) {
         localStorage.setItem("app_version", APP_VERSION);
         const urlParams = new URLSearchParams(window.location.search);
@@ -416,10 +396,6 @@
     <div class="header-container">
         <h1 class="main-title fit-container"><span class="fit-text" data-en="Wishlist Manager" data-ar="مدير قائمة الأمنيات">Wishlist Manager</span></h1>
         <div class="sub-title" data-en="Made By King of Games" data-ar="تطوير King of Games">Made By King of Games</div>
-        <div id="langToggleBtn" class="lang-toggle-btn" onclick="switchLanguage()">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg>
-            <span class="fit-text" data-en="ARABIC" data-ar="ENGLISH">ARABIC</span>
-        </div>
     </div>
 
     <div id="login-section" class="card">
@@ -464,24 +440,29 @@
 
     <div id="dashboard-section" class="card large hidden">
         <div class="user-card">
-            <div class="avatar-circle">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="var(--accent)" style="flex-shrink:0; display:block;"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
-            </div>
-            <div class="user-meta">
-                <div class="fit-container" style="justify-content: flex-start;"><span class="logged-in-text fit-text" data-en="LOGGED IN AS" data-ar="مسجل الدخول كـ">LOGGED IN AS</span></div>
-                <div class="fit-container" style="justify-content: flex-start;"><span class="uid-text fit-text" id="displayUid"></span></div>
-                <div class="region-badge">
-                    <svg viewBox="0 0 24 24" fill="currentColor" style="width: 12px; height: 12px; min-width: 12px; min-height: 12px; flex-shrink: 0; display:block;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
-                    <span id="displayRegion"></span>
+            <div style="display: flex; align-items: center; gap: 15px; width: 100%;">
+                <div class="avatar-circle">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="var(--accent)" style="flex-shrink:0; display:block;"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+                </div>
+                <div class="user-meta">
+                    <div class="fit-container" style="justify-content: flex-start;"><span class="logged-in-text fit-text" data-en="LOGGED IN AS" data-ar="مسجل الدخول كـ">LOGGED IN AS</span></div>
+                    <div class="fit-container" style="justify-content: flex-start;"><span class="uid-text fit-text" id="displayUid"></span></div>
+                    <div class="region-badge">
+                        <svg viewBox="0 0 24 24" fill="currentColor" style="width: 12px; height: 12px; min-width: 12px; min-height: 12px; flex-shrink: 0; display:block;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+                        <span id="displayRegion"></span>
+                    </div>
+                </div>
+                <div class="user-actions">
+                    <button class="action-icon-btn btn-copy" onclick="copyUid()" title="Copy">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"></path></svg>
+                    </button>
+                    <button class="action-icon-btn btn-exit" onclick="logout()" title="Logout">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                    </button>
                 </div>
             </div>
-            <div class="user-actions">
-                <button class="action-icon-btn btn-copy" onclick="copyUid()" title="Copy">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"></path></svg>
-                </button>
-                <button class="action-icon-btn btn-exit" onclick="logout()" title="Logout">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
-                </button>
+            <div class="lang-selector-wrapper" style="margin-bottom: 0;">
+                <select id="dashLangSelect" onchange="changeDashLang()"></select>
             </div>
         </div>
 
@@ -636,13 +617,19 @@
 
 <script>
     const API_BASE = "https://kog-api-gateway.vercel.app/api/wishlist/account";
-    const GITHUB_BASE = "https://raw.githubusercontent.com/KingofGames02/Free-Fire-Items-Library/main";
-    const ICONS_BASE = "https://raw.githubusercontent.com/KingofGames02/Free-Fire-Items-Library/main/ff-icons";
+    const GITHUB_BASE = "https://kingofgames02.github.io/Free-Fire-Items-Library/";
+    
     let libraryData = {};
     let collectionBanners = [];
+    let cdnMapData = [];
     let myWishlistIds = [];
-    let updatedIconsSet = new Set();
     
+    let locMapLive = {};
+    let locMapAdv = {};
+    let linesLive = [];
+    let linesAdv = [];
+    let hfMap = {};
+
     let isRemoveMode = false;
     let selectedForRemoval = new Set();
     
@@ -652,7 +639,28 @@
     let currentSearchedUid = null;
     let isActionRunning = false;
     let loadingTimeout;
-    let currentLang = 'en';
+    
+    let currentDataLang = 'en';
+    let currentUILang = 'en';
+
+    const langConfig = {
+      'en': { name: 'English', file: 'loc_en.txt', fontNorm: 'GFF-Latin-CdMedium', fontBold: 'GFF-Latin-Bold' },
+      'ar': { name: 'Arabic', file: 'loc_ar.txt', fontNorm: 'FONT_SIMPBDO', margin: 2 },
+      'es': { name: 'Spanish', file: 'loc_es.txt', fontNorm: 'GFF-Latin-CdMedium' },
+      'es-na': { name: 'Spanish (NA)', file: 'loc_es-na.txt', fontNorm: 'GFF-Latin-CdMedium' },
+      'pt-br': { name: 'Brazilian Portuguese', file: 'loc_pt-br.txt', fontNorm: 'GFF-Latin-CdMedium' },
+      'fr': { name: 'French', file: 'loc_fr.txt', fontNorm: 'GFF-Latin-CdMedium' },
+      'ind': { name: 'Indonesia', file: 'loc_ind.txt', fontNorm: 'GFF-Latin-CdMedium' },
+      'vn': { name: 'Vietnamese', file: 'loc_vn.txt', fontNorm: 'GFF-Latin-CdMedium' },
+      'th': { name: 'Thai', file: 'loc_th.txt', fontNorm: 'FONT_SUPERMARKET', margin: 6 },
+      'ms': { name: 'Malay', file: 'loc_ms.txt', fontNorm: 'GFF-Latin-CdMedium', fontBold: 'GFF-Latin-Bold' },
+      'tr': { name: 'Turkish', file: 'loc_tr.txt', fontNorm: 'GFF-Latin-CdMedium' },
+      'ru': { name: 'Russian', file: 'loc_ru.txt', fontNorm: 'GFF-Latin-CdMedium' },
+      'zh-tw': { name: 'Traditional Chinese', file: 'loc_zh-tw.txt', fontNorm: 'FONT_FF_CN_T' },
+      'hi': { name: 'Hindi', file: 'loc_hi.txt', fontNorm: 'FONT_NOTOSANS', fontBold: 'FONT_NOTOSANS_BOLD', margin: 2 },
+      'bn': { name: 'Bengali', file: 'loc_bn.txt', fontNorm: 'FONT_HINDSILIGURI', margin: 4 },
+      'en-in': { name: 'English (IN)', file: 'loc_en-in.txt', fontNorm: 'GFF-Latin-CdMedium' }
+    };
 
     const rarityMap = {
         "White": "COMMON", "Green": "UNCOMMON", "Blue": "RARE",
@@ -691,40 +699,74 @@
         limitReached: { en: "Wishlist capacity reached.", ar: "تم الوصول للحد الأقصى للقائمة." },
         emptyWishlist: { en: "Wishlist is already empty.", ar: "قائمة الأمنيات فارغة بالفعل." },
         allAdded: { en: "All items are already in your wishlist.", ar: "كافة العناصر موجودة مسبقاً في قائمتك." },
-        myWishlist: { en: "MY WISHLIST", ar: "قائمة أمنياتي" }
+        myWishlist: { en: "MY WISHLIST", ar: "قائمة أمنياتي" },
+        loginToAdd: { en: "Please login to add items to your wishlist.", ar: "يرجى تسجيل الدخول لإضافة العناصر لقائمة أمنياتك." }
     };
-    const _t = (key) => langDict[key][currentLang];
+    const _t = (key) => langDict[key][currentUILang];
 
     function detectLanguage() {
-        const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.get('lang') === 'ar') {
-            currentLang = 'ar';
-            document.documentElement.dir = 'rtl';
-            document.documentElement.lang = 'ar';
+        const browserLang = (navigator.language || navigator.userLanguage).toLowerCase();
+        if (browserLang.includes('ar')) {
+            currentDataLang = 'ar';
+            currentUILang = 'ar';
         } else {
-            currentLang = 'en';
-            document.documentElement.dir = 'ltr';
-            document.documentElement.lang = 'en';
+            const mapped = Object.keys(langConfig).find(k => browserLang.startsWith(k));
+            if (mapped) currentDataLang = mapped;
         }
+        document.documentElement.dir = currentUILang === 'en' ? 'ltr' : 'rtl';
+        document.documentElement.lang = currentUILang;
+        populateLangSelect();
+    }
+
+    function populateLangSelect() {
+        const sel = document.getElementById('dashLangSelect');
+        sel.innerHTML = '';
+        Object.keys(langConfig).forEach(key => {
+            sel.innerHTML += `<option value="${key}">${langConfig[key].name}</option>`;
+        });
+        sel.value = currentDataLang;
+    }
+
+    async function changeDashLang() {
+        if (isActionRunning) return;
+        currentDataLang = document.getElementById('dashLangSelect').value;
+        currentUILang = currentDataLang === 'ar' ? 'ar' : 'en';
+        document.documentElement.dir = currentUILang === 'en' ? 'ltr' : 'rtl';
+        document.documentElement.lang = currentUILang;
+        applyTranslations();
+        showLoading(true, 'loading');
+        try {
+            const locFile = langConfig[currentDataLang].file;
+            const res = await fetch(`${GITHUB_BASE}Data/live/${locFile}?v=${APP_VERSION}`);
+            if (res.ok) {
+                const txt = await res.text();
+                linesLive = txt.split(/\r?\n/);
+                Object.values(libraryData).forEach(item => {
+                    item.NameText = resolveText(item.Name, currentDataLang);
+                    item.DescText = resolveText(item.Desc, currentDataLang);
+                });
+                if (!document.getElementById("dashboard-section").classList.contains("hidden")) {
+                    renderGrid(myWishlistIds, "wishlistGrid", 'dashboard');
+                }
+                if (!document.getElementById("search-section").classList.contains("hidden") && !document.getElementById("searchedUserSection").classList.contains("hidden")) {
+                    renderGrid(Array.from(document.querySelectorAll('#searchedGrid .item-wrapper')).map(el => parseInt(el.getAttribute('data-id'))), "searchedGrid", 'search');
+                }
+            }
+        } catch (e) {}
+        showLoading(false);
+        fitText();
     }
 
     function applyTranslations() {
         document.querySelectorAll('[data-en]').forEach(el => {
-            el.innerHTML = currentLang === 'ar' ? el.getAttribute('data-ar') : el.getAttribute('data-en');
+            el.innerHTML = currentUILang === 'ar' ? el.getAttribute('data-ar') : el.getAttribute('data-en');
         });
         document.querySelectorAll('[data-ph-en]').forEach(el => {
-            el.placeholder = currentLang === 'ar' ? el.getAttribute('data-ph-ar') : el.getAttribute('data-ph-en');
+            el.placeholder = currentUILang === 'ar' ? el.getAttribute('data-ph-ar') : el.getAttribute('data-ph-en');
         });
         document.getElementById('txtProcessing').innerText = _t('processing');
         updateSearchBulkUIButtonOnly();
         updateRemoveUIButtonOnly();
-    }
-
-    function switchLanguage() {
-        if (isActionRunning) return;
-        const urlParams = new URLSearchParams(window.location.search);
-        urlParams.set('lang', currentLang === 'en' ? 'ar' : 'en');
-        window.location.search = urlParams.toString();
     }
 
     function fitText() {
@@ -785,18 +827,92 @@
         }, 5000);
     }
 
-    function setupIconFallback(imgElement, id) {
-        const item = libraryData[id] || {};
-        const idStr = String(id);
-        const iconStr = item.Icon ? String(item.Icon) : null;
-        const urls = [];
-        if (updatedIconsSet.has(idStr)) urls.push(`${ICONS_BASE}/${idStr}_2.png`);
-        urls.push(`${ICONS_BASE}/${idStr}.png`);
-        if (iconStr) {
-            if (updatedIconsSet.has(iconStr)) urls.push(`${ICONS_BASE}/${iconStr}_2.png`);
-            urls.push(`${ICONS_BASE}/${iconStr}.png`);
+    function checkPendingItems() {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('additems')) {
+            window.pendingAddItems = urlParams.get('additems');
+            urlParams.delete('additems');
+            const newSearch = urlParams.toString() ? '?' + urlParams.toString() : '';
+            window.history.replaceState({}, document.title, window.location.pathname + newSearch);
         }
-        urls.push(`${GITHUB_BASE}/RareBG_Quality/UNKNOWN.png`);
+    }
+
+    async function processPendingItems() {
+        if (!window.pendingAddItems) return;
+        const idsStr = window.pendingAddItems;
+        window.pendingAddItems = null;
+        
+        const ids = idsStr.split(',').map(i => parseInt(i.trim())).filter(i => !isNaN(i));
+        if (!ids.length) return;
+
+        const validIds = ids.filter(id => libraryData[id] && !myWishlistIds.includes(id));
+        const invalidIds = ids.filter(id => !libraryData[id]);
+
+        if (invalidIds.length > 0) {
+            showNotification(currentUILang === 'ar' ? `المعرفات التالية غير صالحة: ${invalidIds.join(', ')}` : `Invalid IDs: ${invalidIds.join(', ')}`, 'error', 'dashboard');
+        }
+
+        if (validIds.length > 0) {
+            if (myWishlistIds.length + validIds.length > 100) {
+                showNotification(currentUILang === 'ar' ? 'تم الوصول للحد الأقصى للقائمة.' : 'Wishlist capacity reached.', 'error', 'dashboard');
+                return;
+            }
+            await executeModifyWishlist('add', validIds, 'dashboard');
+            showNotification(currentUILang === 'ar' ? 'تمت إضافة العناصر بنجاح!' : 'Items added successfully!', 'success', 'dashboard');
+        } else if (ids.length > 0 && invalidIds.length === 0) {
+            showNotification(_t('alreadyIn'), 'warning', 'dashboard');
+        }
+    }
+
+    function resolveText(key, lang) {
+        if (!key) return "";
+        if (hfMap[key]) return hfMap[key][lang] || hfMap[key]['en'] || key;
+        if (locMapLive[key] !== undefined) {
+            let text = linesLive[locMapLive[key] - 1];
+            return text !== undefined ? text.trim() : key;
+        }
+        if (locMapAdv[key] !== undefined) {
+            let text = linesAdv[locMapAdv[key] - 1];
+            return text !== undefined ? text.trim() : key;
+        }
+        return key;
+    }
+
+    function getIconUrlsArrayObj(id, isBanner, bannerIconStr) {
+        const item = libraryData[id] || {};
+        let urls = [];
+        let itemID = String(id);
+        let iconName = item.Icon ? String(item.Icon) : null;
+        
+        let cdnMatch = null;
+        if (isBanner && bannerIconStr) {
+            cdnMatch = cdnMapData.find(e => String(e.IconName).toLowerCase() === bannerIconStr.toLowerCase());
+        } else {
+            cdnMatch = cdnMapData.find(e => String(e.IconName) === itemID || (iconName && String(e.IconName) === iconName));
+        }
+
+        if (cdnMatch && cdnMatch.CDNUrl) {
+            let cdnUrl = String(cdnMatch.CDNUrl);
+            urls.push(`${GITHUB_BASE}ff-icons/${cdnUrl}.png`);
+            if (/[a-zA-Z]/.test(cdnUrl)) urls.push(`${GITHUB_BASE}ff-icons/${cdnUrl.toLowerCase()}.png`);
+        }
+
+        if (isBanner && bannerIconStr) {
+            urls.push(`${GITHUB_BASE}ff-icons/${bannerIconStr}.png`);
+        } else {
+            urls.push(`${GITHUB_BASE}ff-icons/${itemID}_2.png`);
+            urls.push(`${GITHUB_BASE}ff-icons/${itemID}.png`);
+            if (iconName) {
+                urls.push(`${GITHUB_BASE}ff-icons/${iconName}_2.png`);
+                urls.push(`${GITHUB_BASE}ff-icons/${iconName}.png`);
+            }
+        }
+        urls.push(`${GITHUB_BASE}RareBG_Quality/UNKNOWN.png`);
+        return urls;
+    }
+
+    function setupIconFallback(imgElement, id) {
+        const urls = getIconUrlsArrayObj(id, false, null);
         let currentIdx = 0;
         imgElement.onerror = function() {
             currentIdx++;
@@ -815,36 +931,73 @@
     async function init() {
         detectLanguage();
         applyTranslations();
+        checkPendingItems();
         showLoading(true, 'loading');
+
         try {
-            const dataFile = currentLang === 'ar' ? 'ItemsData_ar.json' : 'ItemsData_en.json';
-            const [resData, resUpdated, resBanner] = await Promise.all([
-                fetch(`${GITHUB_BASE}/${dataFile}?v=${APP_VERSION}`),
-                fetch(`${GITHUB_BASE}/updated_icons.json?v=${APP_VERSION}`),
-                fetch(`${GITHUB_BASE}/CollectionBanner.json?v=${APP_VERSION}`)
-            ]);
-            if (resData.ok) {
-                const data = await resData.json();
-                libraryData = data.reduce((acc, item) => { acc[item.Id] = item; return acc; }, {});
+            const locFile = langConfig[currentDataLang].file;
+            const fetches = [
+                fetch(`${GITHUB_BASE}Data/advance/FFAdv_ItemsData.json?v=${APP_VERSION}`).then(r=>r.ok?r.json():[]),
+                fetch(`${GITHUB_BASE}Data/live/FF_ItemsData.json?v=${APP_VERSION}`).then(r=>r.ok?r.json():[]),
+                fetch(`${GITHUB_BASE}Data/advance/CollectionBanner.json?v=${APP_VERSION}`).then(r=>r.ok?r.json():[]),
+                fetch(`${GITHUB_BASE}Data/live/CollectionBanner.json?v=${APP_VERSION}`).then(r=>r.ok?r.json():[]),
+                fetch(`${GITHUB_BASE}Data/live/IconCDNMap.json?v=${APP_VERSION}`).then(r=>r.ok?r.json():[]),
+                fetch(`${GITHUB_BASE}Data/advance/FFAdv_LocId.json?v=${APP_VERSION}`).then(r=>r.ok?r.json():[]),
+                fetch(`${GITHUB_BASE}Data/live/FF_LocId.json?v=${APP_VERSION}`).then(r=>r.ok?r.json():[]),
+                fetch(`${GITHUB_BASE}Data/advance/loc_en.txt?v=${APP_VERSION}`).then(r=>r.ok?r.text():""),
+                fetch(`${GITHUB_BASE}Data/live/${locFile}?v=${APP_VERSION}`).then(r=>r.ok?r.text():""),
+                fetch(`${GITHUB_BASE}Data/live/LocHotFix.json?v=${APP_VERSION}`).then(r=>r.ok?r.json():[])
+            ];
+            
+            const [
+                advItems, liveItems, advBanners, liveBanners, cdnMap,
+                advLocId, liveLocId, advLocTxt, liveLocTxt, hotFixes
+            ] = await Promise.all(fetches);
+
+            const itemsMap = {};
+            (Array.isArray(advItems) ? advItems : Object.values(advItems)).forEach(i => itemsMap[i.Id] = i);
+            (Array.isArray(liveItems) ? liveItems : Object.values(liveItems)).forEach(i => itemsMap[i.Id] = i);
+            libraryData = itemsMap;
+
+            const bannersMap = {};
+            (Array.isArray(advBanners) ? advBanners : Object.values(advBanners)).forEach(b => bannersMap[b.itemID] = b);
+            (Array.isArray(liveBanners) ? liveBanners : Object.values(liveBanners)).forEach(b => bannersMap[b.itemID] = b);
+            collectionBanners = Object.values(bannersMap);
+
+            cdnMapData = Array.isArray(cdnMap) ? cdnMap : Object.values(cdnMap);
+
+            linesAdv = advLocTxt.split(/\r?\n/);
+            linesLive = liveLocTxt.split(/\r?\n/);
+
+            (Array.isArray(advLocId) ? advLocId : Object.values(advLocId)).forEach(i => { if(i.Id && i.Row) locMapAdv[i.Id] = i.Row; });
+            (Array.isArray(liveLocId) ? liveLocId : Object.values(liveLocId)).forEach(i => { if(i.Id && i.Row) locMapLive[i.Id] = i.Row; });
+
+            if(hotFixes) {
+                (Array.isArray(hotFixes) ? hotFixes : Object.values(hotFixes)).forEach(i => { if(i.new) hfMap[i.id] = i; });
             }
-            if (resUpdated.ok) {
-                const updatedArr = await resUpdated.json();
-                updatedIconsSet = new Set(updatedArr);
-            }
-            if (resBanner.ok) {
-                const bannerArr = await resBanner.json();
-                collectionBanners = Array.isArray(bannerArr) ? bannerArr : Object.values(bannerArr);
-            }
-        } catch (e) { }
+
+            Object.values(libraryData).forEach(item => {
+                item.NameText = resolveText(item.Name, currentDataLang);
+                item.DescText = resolveText(item.Desc, currentDataLang);
+            });
+
+        } catch (e) {}
         
         if (sessionStorage.getItem("token")) { 
             showDashboard(); updateUserInfo(); await fetchWishlist(); 
             showLoading(false);
+            processPendingItems();
         } else if (localStorage.getItem('ff_auto_type')) {
             const success = await performAutoLogin();
-            if (!success) showLoading(false);
+            if (!success) {
+                showLoading(false);
+                if (window.pendingAddItems) showNotification(_t('loginToAdd'), 'warning', 'login');
+            } else {
+                processPendingItems();
+            }
         } else {
             showLoading(false);
+            if (window.pendingAddItems) showNotification(_t('loginToAdd'), 'warning', 'login');
         }
         setTimeout(fitText, 100);
     }
@@ -907,7 +1060,6 @@
     function showDashboard() {
         document.querySelectorAll('.card').forEach(c => c.classList.add('hidden'));
         document.getElementById("dashboard-section").classList.remove("hidden");
-        document.getElementById("langToggleBtn").classList.add("hidden");
         setTimeout(fitText, 50);
     }
 
@@ -1037,20 +1189,20 @@
 
         if (type === 'file') {
             const file = document.getElementById("guestFile").files[0];
-            if (!file) { showLoading(false); return showNotification(currentLang === 'ar' ? "يرجى اختيار ملف أولاً." : "Please select a file first.", 'warning', 'login'); }
+            if (!file) { showLoading(false); return showNotification(currentUILang === 'ar' ? "يرجى اختيار ملف أولاً." : "Please select a file first.", 'warning', 'login'); }
             
             if (!file.name.toLowerCase().endsWith('.dat')) {
                 showLoading(false);
                 document.getElementById("guestFile").value = "";
-                document.getElementById("fileLabel").innerText = currentLang === 'ar' ? 'لم يتم اختيار ملف' : 'No file chosen';
-                return showNotification(currentLang === 'ar' ? "يرجى اختيار ملف بصيغة .dat فقط." : "Please select a .dat file only.", 'warning', 'login');
+                document.getElementById("fileLabel").innerText = currentUILang === 'ar' ? 'لم يتم اختيار ملف' : 'No file chosen';
+                return showNotification(currentUILang === 'ar' ? "يرجى اختيار ملف بصيغة .dat فقط." : "Please select a .dat file only.", 'warning', 'login');
             }
             datContentToSave = await file.text();
             body = new FormData(); body.append("file", file);
         } else {
             const uid = document.getElementById("manualUid").value;
             const pwd = document.getElementById("manualPassword").value;
-            if(!uid || !pwd) { showLoading(false); return showNotification(currentLang === 'ar' ? "يرجى إدخال البيانات المطلوبة." : "Please enter required credentials.", 'warning', 'login'); }
+            if(!uid || !pwd) { showLoading(false); return showNotification(currentUILang === 'ar' ? "يرجى إدخال البيانات المطلوبة." : "Please enter required credentials.", 'warning', 'login'); }
             uidToSave = uid; pwdToSave = pwd;
             body = JSON.stringify({ uid, password: pwd });
             headers = {"Content-Type": "application/json"};
@@ -1071,6 +1223,9 @@
                 }
 
                 showDashboard(); updateUserInfo(); await fetchWishlist();
+                if (window.pendingAddItems) {
+                    processPendingItems();
+                }
             } else showNotification("Error: " + (data.error || "Login Failed"), 'error', 'login');
         } catch (e) { showNotification("Server connection failed.", 'error', 'login'); }
         showLoading(false);
@@ -1136,12 +1291,12 @@
         
         const invalidIds = ids.filter(id => !libraryData[id]);
         if (invalidIds.length > 0) {
-            showNotification(currentLang === 'ar' ? `المعرفات التالية غير صالحة: ${invalidIds.join(', ')}` : `Invalid IDs: ${invalidIds.join(', ')}`, 'error', 'dashboard');
+            showNotification(currentUILang === 'ar' ? `المعرفات التالية غير صالحة: ${invalidIds.join(', ')}` : `Invalid IDs: ${invalidIds.join(', ')}`, 'error', 'dashboard');
             return;
         }
 
         if (myWishlistIds.length + ids.length > 100) {
-            showNotification(currentLang === 'ar' ? `لا يمكن إضافة ${ids.length} عنصر. الحد الأقصى هو 100` : `Cannot add ${ids.length} items. Limit is 100`, 'error', 'dashboard');
+            showNotification(currentUILang === 'ar' ? `لا يمكن إضافة ${ids.length} عنصر. الحد الأقصى هو 100` : `Cannot add ${ids.length} items. Limit is 100`, 'error', 'dashboard');
             return;
         }
         await executeModifyWishlist('add', ids, 'dashboard');
@@ -1196,7 +1351,7 @@
             }
         }
         
-        const bgUrl = `${GITHUB_BASE}/RareBG_Quality/${rare}.png`;
+        const bgUrl = `${GITHUB_BASE}RareBG_Quality/${rare}.png`;
         
         const wrapper = document.createElement("div");
         wrapper.className = "item-wrapper";
@@ -1351,10 +1506,10 @@
                 } else {
                     const title = document.getElementById(context === 'dashboard' ? 'dashboardTitle' : 'searchBulkStatusText');
                     if (context === 'dashboard') {
-                        title.innerText = currentLang === 'ar' ? `تمت الإضافة: ${successCount} | فشل: ${failCount}` : `Added: ${successCount} | Failed: ${failCount}`;
+                        title.innerText = currentUILang === 'ar' ? `تمت الإضافة: ${successCount} | فشل: ${failCount}` : `Added: ${successCount} | Failed: ${failCount}`;
                         title.style.color = '#FFD700';
                     } else {
-                        title.innerHTML = `<span style="color:#FFD700;">⚠ ${currentLang === 'ar' ? `نجاح: ${successCount} | فشل: ${failCount}` : `Success: ${successCount} | Failed: ${failCount}`}</span>`;
+                        title.innerHTML = `<span style="color:#FFD700;">⚠ ${currentUILang === 'ar' ? `نجاح: ${successCount} | فشل: ${failCount}` : `Success: ${successCount} | Failed: ${failCount}`}</span>`;
                         document.getElementById('searchBulkActionLabel').innerText = _t('completed');
                     }
                     fitText();
@@ -1368,10 +1523,10 @@
 
             if (action === 'add' && failCount > 0) {
                 if (isBulk) {
-                    const msg = currentLang === 'ar' ? `اكتمل مع وجود أخطاء: فشل إضافة ${failCount} عنصر.` : `Completed with errors: failed to add ${failCount} item(s).`;
+                    const msg = currentUILang === 'ar' ? `اكتمل مع وجود أخطاء: فشل إضافة ${failCount} عنصر.` : `Completed with errors: failed to add ${failCount} item(s).`;
                     showNotification(msg, 'warning', context);
                 } else {
-                    const msg = currentLang === 'ar' ? 'فشلت عملية الإضافة (عنصر غير صالح)' : 'Failed to add item (Invalid item)';
+                    const msg = currentUILang === 'ar' ? 'فشلت عملية الإضافة (عنصر غير صالح)' : 'Failed to add item (Invalid item)';
                     showNotification(msg, 'error', context);
                 }
             }
@@ -1423,7 +1578,7 @@
                     element.classList.remove('selected-add');
                 } else {
                     if (myWishlistIds.length + selectedForAdding.size >= 100) {
-                        showNotification(currentLang === 'ar' ? 'تم الوصول للحد الأقصى للقائمة.' : 'Wishlist capacity reached.', 'error', 'search');
+                        showNotification(currentUILang === 'ar' ? 'تم الوصول للحد الأقصى للقائمة.' : 'Wishlist capacity reached.', 'error', 'search');
                         return;
                     }
                     selectedForAdding.add(id);
@@ -1450,7 +1605,7 @@
                 }
             }
             
-            const bgUrl = `${GITHUB_BASE}/RareBG_Quality/${rare}.png`;
+            const bgUrl = `${GITHUB_BASE}RareBG_Quality/${rare}.png`;
             
             const wrapper = document.createElement("div");
             wrapper.className = "item-wrapper";
@@ -1673,7 +1828,7 @@
         if (isActionRunning) return;
         if(selectedForAdding.size === 0) return;
         const ids = Array.from(selectedForAdding);
-        if (myWishlistIds.length + ids.length > 100) return showNotification(currentLang === 'ar' ? 'تم الوصول للحد الأقصى للقائمة.' : 'Wishlist capacity reached.', 'error', 'search');
+        if (myWishlistIds.length + ids.length > 100) return showNotification(currentUILang === 'ar' ? 'تم الوصول للحد الأقصى للقائمة.' : 'Wishlist capacity reached.', 'error', 'search');
         await executeModifyWishlist('add', ids, 'search');
         selectedForAdding.clear();
         isSearchAddMode = false;
@@ -1687,7 +1842,7 @@
         const allNodes = document.querySelectorAll("#searchedGrid .item-wrapper");
         const allIds = Array.from(allNodes).map(n => parseInt(n.getAttribute('data-id'))).filter(id => !myWishlistIds.includes(id));
         if(allIds.length === 0) return showNotification(_t('allAdded'), 'warning', 'search');
-        if(myWishlistIds.length + allIds.length > 100) return showNotification(currentLang === 'ar' ? `تم الوصول للحد الأقصى للقائمة. ${allIds.length} عنصر.` : `Wishlist capacity reached. ${allIds.length} items.`, 'error', 'search');
+        if(myWishlistIds.length + allIds.length > 100) return showNotification(currentUILang === 'ar' ? `تم الوصول للحد الأقصى للقائمة. ${allIds.length} عنصر.` : `Wishlist capacity reached. ${allIds.length} items.`, 'error', 'search');
         await executeModifyWishlist('add', allIds, 'search');
         isSearchAddMode = false;
         selectedForAdding.clear();
@@ -1700,6 +1855,8 @@
         const actionArea = document.getElementById("modalActionArea");
         const iconEl = document.getElementById("modalIcon");
         const wrapperEl = document.querySelector(".modal-icon-wrapper");
+        const modalNameEl = document.getElementById("modalName");
+        const modalDescEl = document.getElementById("modalDesc");
         
         wrapperEl.classList.add('is-loading');
         iconEl.style.opacity = "0";
@@ -1707,11 +1864,17 @@
         iconEl.classList.remove('weapon-tilt');
         
         const item = libraryData[id] || {};
-        const nameFallback = currentLang === 'en' ? "No name available." : "لا يوجد اسم متاح.";
-        const descFallback = currentLang === 'en' ? "No description available." : "لا يوجد وصف متاح.";
+        
+        let curConf = langConfig[currentDataLang] || langConfig['en'];
+        modalNameEl.style.fontFamily = curConf.fontBold ? `'${curConf.fontBold}', sans-serif` : `'${curConf.fontNorm}', sans-serif`;
+        modalDescEl.style.fontFamily = `'${curConf.fontNorm}', sans-serif`;
+        modalNameEl.style.marginTop = curConf.margin ? `${curConf.margin}px` : '0';
 
-        const itemName = (item.Name && item.Name.trim() !== "") ? item.Name : nameFallback;
-        const itemDesc = (item.Desc && item.Desc.trim() !== "") ? item.Desc : descFallback;
+        const nameFallback = currentUILang === 'en' ? "No name available." : "لا يوجد اسم متاح.";
+        const descFallback = currentUILang === 'en' ? "No description available." : "لا يوجد وصف متاح.";
+
+        const itemName = (item.NameText && item.NameText.trim() !== "") ? item.NameText : nameFallback;
+        const itemDesc = (item.DescText && item.DescText.trim() !== "") ? item.DescText : descFallback;
 
         const bannerObj = collectionBanners.find(b => b.itemID === parseInt(id));
         const isBanner = !!bannerObj;
@@ -1719,10 +1882,10 @@
 
         const itemIconId = bannerIcon ? bannerIcon : (item.Icon || "N/A");
 
-        document.getElementById("modalName").innerText = itemName;
+        modalNameEl.innerText = itemName;
         document.getElementById("modalId").innerText = id;
         document.getElementById("modalIconId").innerText = itemIconId;
-        document.getElementById("modalDesc").innerText = itemDesc;
+        modalDescEl.innerText = itemDesc;
 
         iconEl.className = "large-icon";
         
@@ -1737,22 +1900,7 @@
         
         iconEl.onload = checkModalTilt;
         
-        const urls = [];
-        const idStr = String(id);
-        
-        if (isBanner && bannerIcon) {
-            if (updatedIconsSet.has(bannerIcon)) urls.push(`${ICONS_BASE}/${bannerIcon}_2.png`);
-            urls.push(`${ICONS_BASE}/${bannerIcon}.png`);
-        } else {
-            if (updatedIconsSet.has(idStr)) urls.push(`${ICONS_BASE}/${idStr}_2.png`);
-            urls.push(`${ICONS_BASE}/${idStr}.png`);
-            if (item.Icon) {
-                const iconStr = String(item.Icon);
-                if (updatedIconsSet.has(iconStr)) urls.push(`${ICONS_BASE}/${iconStr}_2.png`);
-                urls.push(`${ICONS_BASE}/${iconStr}.png`);
-            }
-        }
-        urls.push(`${GITHUB_BASE}/RareBG_Quality/UNKNOWN.png`);
+        const urls = getIconUrlsArrayObj(id, isBanner, bannerIcon);
 
         let currentIdx = 0;
         iconEl.onerror = function() {
@@ -1789,7 +1937,7 @@
     async function modifySingleItem(action, id, modalId, context) {
         if (isActionRunning) return;
         if (action === 'add' && myWishlistIds.length >= 100) {
-            showNotification(currentLang === 'ar' ? 'تم الوصول للحد الأقصى للقائمة.' : 'Wishlist capacity reached.', 'error', context);
+            showNotification(currentUILang === 'ar' ? 'تم الوصول للحد الأقصى للقائمة.' : 'Wishlist capacity reached.', 'error', context);
             return;
         }
         closeModal(modalId);
