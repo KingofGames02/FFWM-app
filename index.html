@@ -730,16 +730,18 @@
         }
     }
 
-    async function getCfToken() {
+    async function getCfToken(silentAlert = false) {
         if (!currentCfToken) {
             let attempts = 0;
-            while (!currentCfToken && attempts < 15) {
+            while (!currentCfToken && attempts < 60) {
                 await new Promise(r => setTimeout(r, 200));
                 attempts++;
             }
         }
         if (!currentCfToken) {
-            alert(currentUILang === 'ar' ? "جاري تجهيز التحقق الأمني، جرب مجدداً بعد ثانية." : "Security verification preparing, try again in a second.");
+            if (!silentAlert) {
+                alert(currentUILang === 'ar' ? "فشل التحقق الأمني، يرجى إعادة تحميل الصفحة." : "Security verification failed, please reload the page.");
+            }
             return null;
         }
         const tokenToUse = currentCfToken;
@@ -1053,8 +1055,13 @@
         const type = localStorage.getItem('ff_auto_type');
         if (!type) return false;
 
-        const tokenToUse = await getCfToken();
-        if(!tokenToUse) return false;
+        showLoading(true, 'loggingIn');
+
+        const tokenToUse = await getCfToken(true);
+        if(!tokenToUse) {
+            showLoading(false);
+            return false;
+        }
 
         let body, headers = { "X-Turnstile-Token": tokenToUse };
         if (type === 'file') {
@@ -1071,7 +1078,6 @@
             headers["Content-Type"] = "application/json";
         }
 
-        showLoading(true, 'loggingIn');
         try {
             const res = await fetch(`${API_BASE}/login`, { method: "POST", headers, body });
             const data = await res.json();
@@ -1255,7 +1261,7 @@
             body = JSON.stringify({ uid, password: pwd });
         }
 
-        const tokenToUse = await getCfToken();
+        const tokenToUse = await getCfToken(false);
         if(!tokenToUse) { showLoading(false); return; }
 
         let headers = { "X-Turnstile-Token": tokenToUse };
@@ -1300,7 +1306,7 @@
     }
 
     async function fetchWishlist() {
-        const tokenToUse = await getCfToken();
+        const tokenToUse = await getCfToken(true);
         if(!tokenToUse) return;
         try {
             const res = await fetch(`${API_BASE}/wishlist`, {
@@ -1463,7 +1469,7 @@
                 showLoading(true, 'loading');
                 for (let i = 0; i < ids.length; i++) {
                     const currentId = ids[i];
-                    const tokenToUse = await getCfToken();
+                    const tokenToUse = await getCfToken(true);
                     if(!tokenToUse) continue;
                     
                     const payload = {
@@ -1509,7 +1515,7 @@
             for (let i = 0; i < ids.length; i++) {
                 if (isBulk) updateContextProgress(context, action, i + 1, ids.length);
                 
-                const tokenToUse = await getCfToken();
+                const tokenToUse = await getCfToken(true);
                 if(!tokenToUse) { failCount++; continue; }
 
                 const currentId = ids[i];
@@ -1737,7 +1743,7 @@
         resultsDiv.innerHTML = "";
         userSection.classList.add("hidden");
 
-        const tokenToUse = await getCfToken();
+        const tokenToUse = await getCfToken(false);
         if(!tokenToUse) { showLoading(false); return; }
 
         if (!isNaN(query)) {
@@ -1815,7 +1821,7 @@
         if (isActionRunning) return;
         showLoading(true, 'loading');
         
-        const tokenToUse = await getCfToken();
+        const tokenToUse = await getCfToken(false);
         if(!tokenToUse) { showLoading(false); return; }
 
         try {
