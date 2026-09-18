@@ -7,6 +7,7 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <title>Wishlist Manager</title>
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap');
         @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap');
@@ -387,6 +388,7 @@
 </script>
 </head>
 <body>
+    <div id="cf-turnstile-widget"></div>
 
     <div id="loadingOverlay" class="loader-container hidden">
         <div class="loader"></div>
@@ -643,6 +645,9 @@
     let currentDataLang = 'en';
     let currentUILang = 'en';
 
+    let turnstileWidgetId = null;
+    let currentCfToken = null;
+
     const langConfig = {
       'en': { name: 'English', file: 'loc_en.txt', fontNorm: 'GFF-Latin-CdMedium', fontBold: 'GFF-Latin-Bold' },
       'ar': { name: 'Arabic', file: 'loc_ar.txt', fontNorm: 'FONT_SIMPBDO', margin: 2 },
@@ -703,6 +708,47 @@
         loginToAdd: { en: "Please login to add items to your wishlist.", ar: "يرجى تسجيل الدخول لإضافة العناصر لقائمة أمنياتك." }
     };
     const _t = (key) => langDict[key][currentUILang];
+
+    function initTurnstile() {
+        if (typeof turnstile !== 'undefined' && turnstileWidgetId === null) {
+            try {
+                turnstileWidgetId = turnstile.render('#cf-turnstile-widget', {
+                    sitekey: '0x4AAAAAAE7oOmtjRzm_E2Gq',
+                    theme: 'dark',
+                    callback: function(token) {
+                        currentCfToken = token;
+                    },
+                    'expired-callback': function() {
+                        currentCfToken = null;
+                        turnstile.reset(turnstileWidgetId);
+                    },
+                    'error-callback': function() {
+                        currentCfToken = null;
+                    }
+                });
+            } catch (e) {}
+        }
+    }
+
+    async function getCfToken() {
+        if (!currentCfToken) {
+            let attempts = 0;
+            while (!currentCfToken && attempts < 15) {
+                await new Promise(r => setTimeout(r, 200));
+                attempts++;
+            }
+        }
+        if (!currentCfToken) {
+            alert(currentUILang === 'ar' ? "جاري تجهيز التحقق الأمني، جرب مجدداً بعد ثانية." : "Security verification preparing, try again in a second.");
+            return null;
+        }
+        const tokenToUse = currentCfToken;
+        currentCfToken = null;
+        if (turnstileWidgetId !== null) {
+            try { turnstile.reset(turnstileWidgetId); } catch(e) {}
+        }
+        return tokenToUse;
+    }
 
     function detectLanguage() {
         const browserLang = (navigator.language || navigator.userLanguage).toLowerCase();
@@ -929,6 +975,7 @@
     }
 
     async function init() {
+        setTimeout(initTurnstile, 500);
         detectLanguage();
         applyTranslations();
         checkPendingItems();
@@ -1006,7 +1053,10 @@
         const type = localStorage.getItem('ff_auto_type');
         if (!type) return false;
 
-        let body, headers = {};
+        const tokenToUse = await getCfToken();
+        if(!tokenToUse) return false;
+
+        let body, headers = { "X-Turnstile-Token": tokenToUse };
         if (type === 'file') {
             const datContent = localStorage.getItem('ff_auto_dat');
             if (!datContent) return false;
@@ -1018,7 +1068,7 @@
             const pwd = localStorage.getItem('ff_auto_pwd');
             if (!uid || !pwd) return false;
             body = JSON.stringify({ uid, password: pwd });
-            headers = {"Content-Type": "application/json"};
+            headers["Content-Type"] = "application/json";
         }
 
         showLoading(true, 'loggingIn');
@@ -1183,9 +1233,7 @@
 
     async function handleLogin(type) {
         showLoading(true, 'processing');
-        let body, headers = {};
-        let datContentToSave = null;
-        let uidToSave = null, pwdToSave = null;
+        let body, datContentToSave = null, uidToSave = null, pwdToSave = null;
 
         if (type === 'file') {
             const file = document.getElementById("guestFile").files[0];
@@ -1205,7 +1253,14 @@
             if(!uid || !pwd) { showLoading(false); return showNotification(currentUILang === 'ar' ? "يرجى إدخال البيانات المطلوبة." : "Please enter required credentials.", 'warning', 'login'); }
             uidToSave = uid; pwdToSave = pwd;
             body = JSON.stringify({ uid, password: pwd });
-            headers = {"Content-Type": "application/json"};
+        }
+
+        const tokenToUse = await getCfToken();
+        if(!tokenToUse) { showLoading(false); return; }
+
+        let headers = { "X-Turnstile-Token": tokenToUse };
+        if (type !== 'file') {
+            headers["Content-Type"] = "application/json";
         }
 
         try {
@@ -1245,13 +1300,16 @@
     }
 
     async function fetchWishlist() {
+        const tokenToUse = await getCfToken();
+        if(!tokenToUse) return;
         try {
             const res = await fetch(`${API_BASE}/wishlist`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                     "Authorization": sessionStorage.getItem("token"),
-                    "Server-Url": sessionStorage.getItem("server_url")
+                    "Server-Url": sessionStorage.getItem("server_url"),
+                    "X-Turnstile-Token": tokenToUse
                 },
                 body: JSON.stringify({ account_id: sessionStorage.getItem("uid") })
             });
@@ -1403,7 +1461,11 @@
 
             if (isInstant && action === 'remove') {
                 showLoading(true, 'loading');
-                const promises = ids.map((currentId, i) => {
+                for (let i = 0; i < ids.length; i++) {
+                    const currentId = ids[i];
+                    const tokenToUse = await getCfToken();
+                    if(!tokenToUse) continue;
+                    
                     const payload = {
                         add_ids: [],
                         del_ids: [currentId],
@@ -1411,24 +1473,25 @@
                         del_src: ["WishList"]
                     };
 
-                    return fetch(`${API_BASE}/wishlist/update`, {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/json",
-                            "Authorization": sessionStorage.getItem("token"),
-                            "Server-Url": sessionStorage.getItem("server_url")
-                        },
-                        body: JSON.stringify(payload)
-                    }).then((res) => {
+                    try {
+                        const res = await fetch(`${API_BASE}/wishlist/update`, {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json",
+                                "Authorization": sessionStorage.getItem("token"),
+                                "Server-Url": sessionStorage.getItem("server_url"),
+                                "X-Turnstile-Token": tokenToUse
+                            },
+                            body: JSON.stringify(payload)
+                        });
                         if (res.status === 401 || res.status === 403) return handleSessionExpiry();
                         if (context === 'dashboard') {
                             const el = grid.querySelector(`[data-id="${currentId}"]`);
                             if (el) el.remove();
                         }
-                    }).catch(e => {});
-                });
+                    } catch(e) {}
+                }
 
-                await Promise.all(promises);
                 if (context === 'dashboard') {
                     myWishlistIds = myWishlistIds.filter(id => !ids.includes(id));
                 }
@@ -1446,6 +1509,9 @@
             for (let i = 0; i < ids.length; i++) {
                 if (isBulk) updateContextProgress(context, action, i + 1, ids.length);
                 
+                const tokenToUse = await getCfToken();
+                if(!tokenToUse) { failCount++; continue; }
+
                 const currentId = ids[i];
                 const payload = {
                     add_ids: action === 'add' ? [currentId] : [],
@@ -1460,7 +1526,8 @@
                         headers: {
                             "Content-Type": "application/json",
                             "Authorization": sessionStorage.getItem("token"),
-                            "Server-Url": sessionStorage.getItem("server_url")
+                            "Server-Url": sessionStorage.getItem("server_url"),
+                            "X-Turnstile-Token": tokenToUse
                         },
                         body: JSON.stringify(payload)
                     });
@@ -1670,6 +1737,9 @@
         resultsDiv.innerHTML = "";
         userSection.classList.add("hidden");
 
+        const tokenToUse = await getCfToken();
+        if(!tokenToUse) { showLoading(false); return; }
+
         if (!isNaN(query)) {
             try {
                 const pRes = await fetch(`${API_BASE}/player`, {
@@ -1677,7 +1747,8 @@
                     headers: {
                         "Content-Type": "application/json",
                         "Authorization": sessionStorage.getItem("token"),
-                        "Server-Url": sessionStorage.getItem("server_url")
+                        "Server-Url": sessionStorage.getItem("server_url"),
+                        "X-Turnstile-Token": tokenToUse
                     },
                     body: JSON.stringify({ account_id: query })
                 });
@@ -1702,7 +1773,8 @@
                     headers: {
                         "Content-Type": "application/json",
                         "Authorization": sessionStorage.getItem("token"),
-                        "Server-Url": sessionStorage.getItem("server_url")
+                        "Server-Url": sessionStorage.getItem("server_url"),
+                        "X-Turnstile-Token": tokenToUse
                     },
                     body: JSON.stringify({ keyword: query })
                 });
@@ -1742,13 +1814,18 @@
     async function fetchExternalWishlist(targetUid, nick = "Unknown", region = "Unknown") {
         if (isActionRunning) return;
         showLoading(true, 'loading');
+        
+        const tokenToUse = await getCfToken();
+        if(!tokenToUse) { showLoading(false); return; }
+
         try {
             const res = await fetch(`${API_BASE}/wishlist`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                     "Authorization": sessionStorage.getItem("token"),
-                    "Server-Url": sessionStorage.getItem("server_url")
+                    "Server-Url": sessionStorage.getItem("server_url"),
+                    "X-Turnstile-Token": tokenToUse
                 },
                 body: JSON.stringify({ account_id: parseInt(targetUid) })
             });
